@@ -1,10 +1,14 @@
+from typing import Union
+from pathlib import Path
 import argparse
+import time
+import json
 import os
-import pprint
 
 from youtube_transcript_api import YouTubeTranscriptApi
 import googleapiclient.discovery
-import googleapiclient.errors
+
+from testplan_generator.categories import CATEGORIES
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -25,23 +29,35 @@ def videos_details_request(videos: list):
     return request.execute()
 
 
+def categories_request(hl: str, region_code: str):
+    request = youtube_api.videoCategories().list(
+        part="snippet",
+        hl=hl,
+        regionCode=region_code
+    )
+
+    return request.execute()
+
+
 def search_request(args: dict):
     request = youtube_api.search().list(
         **args,
         part="snippet",
         type="video",
-        videoCaption="closedCaption"
+        videoCaption="closedCaption",
     )
     response = request.execute()
     response['videoCategoryId'] = args['videoCategoryId']
+
     return response
 
 
 def results_parser(results: dict):
-    keys = {'etag', 'videoId', 'channelId', 'channelTitle', 'publishTime', 'title'}
+    keys = {'videoId', 'channelId', 'channelTitle', 'publishTime', 'title'}
     for video in results['items']:
         video: dict
         dicts = [value for key, value in video.items() if isinstance(value, dict)]
+
         for d in dicts:
             video.update(d)
 
@@ -54,19 +70,20 @@ def results_parser(results: dict):
     return results
 
 
-def default_language(videos):
+def add_default_language(videos):
     video_ids = [video['videoId'] for video in videos]
     response = videos_details_request(video_ids)
 
     for response_item, video in zip(response['items'], videos):
         language = response_item['snippet'].get('defaultAudioLanguage', None)
+
         if response_item['id'] == video['videoId']:
             video['defaultAudioLanguage'] = language
         else:
             raise KeyError
 
 
-def transcripts_info(items):
+def add_transcripts_info(items: list):
     for video in items:
         video_id = video['videoId']
         transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
@@ -74,30 +91,60 @@ def transcripts_info(items):
         video['generated_transcripts'] = list(transcripts._generated_transcripts.keys())
 
 
+def category_title_by_language(category_id: int, hl: str, region_code: str = 'US'):
+    for category in categories_request(hl, region_code)['items']:
+        if category['id'] == category_id:
+            return category['snippet'].get('title', None)
+
+    return None
+
+
+def save_as_json(results: dict, destination: Union[str, os.PathLike]):
+    args = results.get('args')
+    category_id = int(args.get('videoCategoryId'))
+    language = args.get('relevanceLanguage')
+
+    category = CATEGORIES[category_id].replace(' ', '')
+    time_str = time.strftime("%Y%m%d-%H%M%S")
+
+    filename = f'{category}_{language}_{time_str}.json'
+
+    path = Path(destination).joinpath(filename)
+
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(results, f, ensure_ascii=False, indent=4, sort_keys=True)
+
+
 def command_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('destination', type=str)
     parser.add_argument('maxResults', type=int)
-    parser.add_argument('-l', '--relevanceLanguage', required=False, type=str)
+    parser.add_argument('-l', '--relevanceLanguage', required=False, type=str, default='en')
     parser.add_argument('-c', '--videoCategoryId', required=False, type=str)
-    parser.add_argument('-r', '--regionCode', required=False, type=str)
     parser.add_argument('-t', '--topicId', required=False, type=str)
+    parser.add_argument('-r', '--regionCode', required=False, type=str, default='US')
+    parser.add_argument('-npt', '--nextPageToken', required=False, type=str)
     return parser.parse_known_args()
 
 
 def main():
     args, unknown = command_parser()
+
     api_args = vars(args)
-    api_args.pop('destination')
-    api_args.pop('fileName')
+    dest = api_args.pop('destination')
+    api_args['q'] = category_title_by_language(category_id=args.videoCategoryId,
+                                               hl=args.relevanceLanguage,
+                                               region_code=args.regionCode)
+
     search_results = search_request(api_args)
     parsed_results = results_parser(search_results)
+    parsed_results['args'] = api_args
 
-    items= parsed_results['items']
-    transcripts_info(items)
-    default_language(items)
+    items = parsed_results['items']
+    add_transcripts_info(items)
+    add_default_language(items)
 
-    pprint.pprint(parsed_results)
+    save_as_json(results=parsed_results, destination=dest)
 
 
 if __name__ == "__main__":
