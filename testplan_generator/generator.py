@@ -123,7 +123,7 @@ def command_parser():
     parser.add_argument('-c', '--videoCategoryId', required=False, type=str)
     parser.add_argument('-t', '--topicId', required=False, type=str)
     parser.add_argument('-r', '--regionCode', required=False, type=str, default='US')
-    parser.add_argument('-npt', '--nextPageToken', required=False, type=str)
+    parser.add_argument('-pt', '--pageToken', required=False, type=str)
     return parser.parse_known_args()
 
 
