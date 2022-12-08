@@ -104,6 +104,7 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
     category_id = int(args.get('videoCategoryId'))
     language = args.get('relevanceLanguage')
     page_token = args.get('pageToken')
+    max_results = args.get('maxResults')
 
     if page_token is None:
         page_token = 'CAUQAQ'
@@ -111,7 +112,7 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
     category = CATEGORIES[category_id].replace(' ', '')
     time_str = time.strftime("%Y%m%d-%H%M%S")
 
-    filename = f'{category}_{language}_{page_token}_{time_str}.json'
+    filename = f'{category}_{language}_{max_results}x_{page_token}_{time_str}.json'
 
     path = Path(destination).joinpath(filename)
 
