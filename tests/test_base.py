@@ -1,83 +1,124 @@
-from typing import Union, Optional, Iterable
-import json
-import argparse
+from typing import Union, Optional, Iterable, Callable
 from pathlib import Path
 from os import PathLike
+import argparse
+import json
+import time
 
-import whisper
+from loguru import logger
 
-from lib.model import Model
 from lib.video import Video
 
 
-MODEL_TYPES = [
-    'tiny',
-    'base',
-    'small',
-    'medium',
-    'large',
-    'tiny.en',
-    'base.en',
-    'small.en',
-    'medium.en'
-]
-
-
 class TestBase:
-    def __init__(self) -> None:
-        args, unknown = self._parse_command()
+    def __init__(self,
+                 testplan_file: Union[str, PathLike],
+                 audio_path: Union[str, PathLike],
+                 transcript_path: Union[str, PathLike] = None,
+                 ) -> None:
 
-        self.model_type = args['model-type']
-        self.task_manifest = args['task-manifest']
-        self.transcript_path = transcript_path
-        self.audio_path = audio_path
-        self.audio_links = audio_links
-        self.cache = cache
-        self.clear = clear
+        self.audio_path = Path(audio_path)
+        self._transcript_path = Path(transcript_path)
 
-        whisper_kwargs = kwargs.get('whisper', None)
-        self.whisper = whisper.load_model(model_type, whisper_kwargs)
-        self.model = Model(self.whisper, self.model_type, self.transcript_path, cache=self.cache, clear=self.clear)
+        self._testplan_path = testplan_file
 
-    def audio_files(self) -> Iterable:
-        for link in self.audio_links:
-            video = Video(link, self.audio_path)
-            yield video.download_mp3()
+        with open(testplan_file) as f:
+            self._testplan = json.load(f)
 
-    def run(self):
-        self.set_params()
-
-    def set_params(self):
-        args, unknown = self._parse_command()
-
-        self.model_type = args['model-type']
-        self.task_manifest = args['task-manifest']
-        self.transcript_path = args['transcript-path']
-        self.audio_path = args['audio-path']
-        self.cache = args['cache']
-        self.clear = args['clear']
+        self.transcriber: Optional[Callable] = None
+        self.normalizer: Optional[Callable] = None
 
     @classmethod
-    def from_args(cls):
+    def from_command_line(cls):
         args, unknown = cls._parse_command()
+        return cls(**vars(args))
 
-        model_type = args['model-type']
-        task_manifest = args['task-manifest']
-        transcript_path = args['transcript-path']
-        audio_path = args['audio-path']
-        cache = args['cache']
-        clear = args['clear']
+    def run(self):
+        if self.transcriber is None:
+            raise ValueError("Transcriber is None")
+
+        if self.normalizer is None:
+            logger.warning("Normalizer is None, running without normalizer")
+
+        try:
+            for video_details in self.video_details:
+                results = self.test_video(video_details)
+                video_details['results'] = results
+
+        except TimeoutError:
+            pass
+
+        self.add_test_details(self._testplan)
+
+        import pprint
+        pprint.pprint(self._testplan)
+        self.save_results(self._testplan)
+
+    def test_video(self, video_details: dict) -> dict:
+        raise NotImplementedError
+
+    @property
+    def video_details(self) -> Iterable[dict]:
+        videos = self._testplan['items']
+        for video_details in videos:
+            yield video_details
+
+    def transcribe(self, audio_path: Path, remove_audio: bool = True, **kwargs) -> dict:
+        result = self.transcriber(audio=str(audio_path), **kwargs)
+
+        if remove_audio:
+            audio_path.unlink()
+
+        return result
+
+    def normalize(self, string: str) -> str:
+        return self.normalizer(string)
+
+    def save_transcript(self, data: dict, filename: str) -> None:
+        time_str = time.strftime("%Y%m%d-%H%M%S")
+        file = f'{filename}_{time_str}.json'
+        path = self._transcript_path.joinpath(file)
+
+        if path.is_file():
+            logger.warning(f'File {file} already exists')
+            return
+
+        path.parent.mkdir(exist_ok=True)
+
+        with open(path, 'x', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+    def add_test_details(self, results: dict):
+        pass
+
+    @classmethod
+    def save_results(cls, results):
+        time_str = time.strftime("%Y%m%d-%H%M%S")
+        path = Path(__file__).parent.joinpath('output', f'{cls.__name__}_{time_str}.json')
+        path.parent.mkdir(exist_ok=True)
+
+        with open(path, 'x', encoding='utf-8') as f:
+            json.dump(results, f, ensure_ascii=False, indent=4)
 
     @staticmethod
-    def _parse_command():
-        parser = argparse.ArgumentParser()
-        parser.add_argument('video-links', required=True, type=str)
-        parser.add_argument('model-type', required=True, choices=MODEL_TYPES)
+    def add_arguments(parser: argparse.ArgumentParser):
+        pass
 
-        parser.add_argument('-tp', '--transcript-path', required=False, type=str, default='./cache/transcript')
-        parser.add_argument('-ap', '--audio-path', required=False, type=str, default='./cache/audio')
-        parser.add_argument('-cr', '--clear', required=False, action='store_true', default=True)
-        parser.add_argument('-c', '--cache', required=False, action='store_true', default=True)
+    @classmethod
+    def _parse_command(cls):
+        parser = argparse.ArgumentParser()
+        cls.add_arguments(parser)
+
+        parser.add_argument(
+            type=str, dest='testplan_file'
+        )
+        parser.add_argument(
+            '-tp', '--transcript-path',
+            required=False, type=str, default='./cache/transcript', dest='transcript_path'
+        )
+        parser.add_argument(
+            '-ap', '--audio-path',
+            required=False, type=str, default='./cache/audio', dest="audio_path"
+        )
 
         return parser.parse_known_args()
-
