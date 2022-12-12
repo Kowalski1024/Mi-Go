@@ -1,5 +1,6 @@
 from typing import Union
 from pathlib import Path
+import dateutil
 import argparse
 import time
 import json
@@ -9,7 +10,6 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import googleapiclient.discovery
 
 from testplan_generator.categories import CATEGORIES
-
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 api_key = os.environ.get("GoogleAPI")
@@ -22,7 +22,7 @@ youtube_api = googleapiclient.discovery.build(api_service_name, api_version, dev
 
 def videos_details_request(videos: list):
     request = youtube_api.videos().list(
-        part="snippet",
+        part="contentDetails,snippet",
         id=','.join(videos)
     )
 
@@ -70,15 +70,17 @@ def results_parser(results: dict):
     return results
 
 
-def add_default_language(videos):
+def add_video_details(videos):
     video_ids = [video['videoId'] for video in videos]
     response = videos_details_request(video_ids)
 
     for response_item, video in zip(response['items'], videos):
         language = response_item['snippet'].get('defaultAudioLanguage', None)
+        duration = response_item['contentDetails'].get('duration')
 
         if response_item['id'] == video['videoId']:
             video['defaultAudioLanguage'] = language
+            video['duration'] = duration
         else:
             raise KeyError
 
@@ -87,8 +89,8 @@ def add_transcripts_info(items: list):
     for video in items:
         video_id = video['videoId']
         transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
-        video['manually_created_transcripts'] = list(transcripts._manually_created_transcripts.keys())
-        video['generated_transcripts'] = list(transcripts._generated_transcripts.keys())
+        video['manuallyCreatedTranscripts'] = list(transcripts._manually_created_transcripts.keys())
+        video['generatedTranscripts'] = list(transcripts._generated_transcripts.keys())
 
 
 def category_title_by_language(category_id: int, hl: str, region_code: str = 'US'):
@@ -104,7 +106,6 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
     category_id = int(args.get('videoCategoryId'))
     language = args.get('relevanceLanguage')
     page_token = args.get('pageToken')
-    max_results = args.get('maxResults')
 
     if page_token is None:
         page_token = 'CAUQAQ'
@@ -112,7 +113,7 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
     category = CATEGORIES[category_id].replace(' ', '')
     time_str = time.strftime("%Y%m%d-%H%M%S")
 
-    filename = f'{category}_{language}_{max_results}x_{page_token}_{time_str}.json'
+    filename = f'{category}_{language}_{page_token}_{time_str}.json'
 
     path = Path(destination).joinpath(filename)
 
@@ -124,11 +125,30 @@ def command_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('destination', type=str)
     parser.add_argument('maxResults', type=int)
-    parser.add_argument('-l', '--relevanceLanguage', required=False, type=str, default='en')
-    parser.add_argument('-c', '--videoCategoryId', required=False, type=str)
-    parser.add_argument('-t', '--topicId', required=False, type=str)
-    parser.add_argument('-r', '--regionCode', required=False, type=str, default='US')
-    parser.add_argument('-pt', '--pageToken', required=False, type=str)
+    parser.add_argument(
+        '-l', '--relevanceLanguage',
+        required=False, type=str, default='en'
+    )
+    parser.add_argument(
+        '-c', '--videoCategoryId',
+        required=False, type=str
+    )
+    parser.add_argument(
+        '-t', '--topicId',
+        required=False, type=str
+    )
+    parser.add_argument(
+        '-r', '--regionCode',
+        required=False, type=str, default='US'
+    )
+    parser.add_argument(
+        '-d', '--videoDuration',
+        required=False, type=str, default='medium', choices=['any', 'long', 'medium', ' short']
+    )
+    parser.add_argument(
+        '-pt', '--pageToken',
+        required=False, type=str
+    )
     return parser.parse_known_args()
 
 
@@ -147,7 +167,7 @@ def main():
 
     items = parsed_results['items']
     add_transcripts_info(items)
-    add_default_language(items)
+    add_video_details(items)
 
     save_as_json(results=parsed_results, destination=dest)
 
