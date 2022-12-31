@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Union, Iterable
 from pathlib import Path
-import dateutil
 import argparse
+import copy
 import time
 import json
 import os
@@ -10,6 +10,7 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import googleapiclient.discovery
 
 from testplan_generator.categories import CATEGORIES
+
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 api_key = os.environ.get("GoogleAPI")
@@ -152,6 +153,30 @@ def command_parser():
     return parser.parse_known_args()
 
 
+def generate(args: dict) -> dict:
+    search_results = search_request(args)
+    parsed_results = results_parser(search_results)
+
+    parsed_results['args'] = args
+
+    items = parsed_results['items']
+    add_transcripts_info(items)
+    add_video_details(items)
+
+    return parsed_results
+
+
+def test_iterator(testplan: dict, iterations: int = 5) -> Iterable[dict]:
+    yield testplan
+
+    for _ in range(iterations-1):
+        args = testplan['args']
+        args['pageToken'] = testplan['nextPageToken']
+        testplan = generate(args)
+
+        yield testplan
+
+
 def main():
     args, unknown = command_parser()
 
@@ -161,15 +186,9 @@ def main():
                                                hl=args.relevanceLanguage,
                                                region_code=args.regionCode)
 
-    search_results = search_request(api_args)
-    parsed_results = results_parser(search_results)
-    parsed_results['args'] = api_args
+    search_results = generate(api_args)
 
-    items = parsed_results['items']
-    add_transcripts_info(items)
-    add_video_details(items)
-
-    save_as_json(results=parsed_results, destination=dest)
+    save_as_json(results=search_results, destination=dest)
 
 
 if __name__ == "__main__":
