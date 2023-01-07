@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS TranscriptDiffResults (
     id INTEGER PRIMARY KEY,
     wer FLOAT,
     matchRatio FLOAT,
+    detectedLanguage TEXT,
     FOREIGN KEY (id) REFERENCES Video(id)
 );
 

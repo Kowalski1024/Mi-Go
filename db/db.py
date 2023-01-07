@@ -93,7 +93,9 @@ def insert_transcript_diff_results(testplan: dict):
     results_keys = [
         'id',
         'wer',
-        'matchRatio'
+        'matchRatio',
+        'detectedLanguage'
+
     ]
 
     replace_keys = [
