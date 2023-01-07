@@ -21,7 +21,7 @@ def differ(model_transcript: str, yt_transcript: str):
     i = len(results['delete'])
     d = len(results['insert'])
 
-    results['WER'] = (s+i+d)/len(model_set)
+    results['wer'] = (s+i+d)/len(model_set)
     results['matchRatio'] = seq_matcher.ratio()
 
     return results
