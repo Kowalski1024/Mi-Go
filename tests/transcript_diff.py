@@ -1,13 +1,13 @@
-from typing import Union, Optional
-from os import PathLike
 import argparse
 
+from loguru import logger
 import whisper
-from whisper.normalizers import BasicTextNormalizer
+from whisper.normalizers import EnglishTextNormalizer
 
 from tests.test_base import TestBase
 from lib.video import Video
 from lib.differs import differ
+import db
 
 
 MODEL_TYPES = [
@@ -33,14 +33,17 @@ class TranscriptDiffTest(TestBase):
         self.model_name = model_type.replace('.', '-')
         self.model = whisper.load_model(model_type)
 
-        self.normalizer = BasicTextNormalizer()
+        self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
 
     def test_video(self, video_details: dict) -> dict:
         video = Video.from_dict(video_details)
         audio = video.download_mp3(self.audio_path)
-        results = self.transcribe(audio, verbose=True, remove_audio=False)
-        self.save_transcript(results, f'{audio.stem}_{self.model_name}')
+
+        logger.info(f"Staring transcribing...")
+        results = self.transcribe(audio, verbose=False, remove_audio=True)
+
+        # self.save_transcript(results, f'{audio.stem}_{self.model_name}')
 
         detected_language = results['language']
 
@@ -51,12 +54,17 @@ class TranscriptDiffTest(TestBase):
         model_transcript = self.normalize(model_transcript)
 
         differ_results = differ(model_transcript, yt_transcript)
+
+        differ_results['detectedLanguage'] = detected_language
+
         return differ_results
 
-    def add_test_details(self, results: dict):
+    def postprocess(self, results: dict):
         results['model'] = {
             'name': self.model_name
         }
+
+        db.insert_transcript_diff_results(results)
 
     @staticmethod
     def add_arguments(parser: argparse.ArgumentParser()):

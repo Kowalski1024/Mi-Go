@@ -7,12 +7,11 @@ def differ(model_transcript: str, yt_transcript: str):
     model_set = model_transcript.split()
     yt_set = yt_transcript.split()
 
-    seq_matcher = SequenceMatcher(a=model_set, b=yt_set)
+    seq_matcher = SequenceMatcher(a=model_set, b=yt_set, autojunk=False)
 
     for tag, alo, ahi, blo, bhi in seq_matcher.get_opcodes():
         if tag == 'replace':
-            for a, b in zip(model_set[alo:ahi], yt_set[blo:bhi]):
-                results[tag].append((a, b))
+            results[tag].extend(zip(model_set[alo:ahi], yt_set[blo:bhi]))
         elif tag == 'delete':
             results[tag].extend(model_set[alo:ahi])
         elif tag == 'insert':
