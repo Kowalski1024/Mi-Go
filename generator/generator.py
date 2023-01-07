@@ -9,7 +9,7 @@ import os
 from youtube_transcript_api import YouTubeTranscriptApi
 import googleapiclient.discovery
 
-from testplan_generator.categories import CATEGORIES
+from generator.categories import CATEGORIES
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -123,24 +123,30 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
 
 
 def command_parser():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('destination', type=str)
+    parser = argparse.ArgumentParser(prog="Testplan generator", description="Generating json files used as testplan")
     parser.add_argument('maxResults', type=int)
     parser.add_argument(
+        '-d', '--destination',
+        required=False, type=str, default='./testplans/',
+        help='Destination of the testplan'
+    )
+    parser.add_argument(
         '-l', '--relevanceLanguage',
-        required=False, type=str, default='en'
+        required=False, type=str, default='en',
+        help='Preferred language'
     )
     parser.add_argument(
         '-c', '--videoCategoryId',
-        required=False, type=str
+        required=False, type=str,
+        help='Video category id, see categories.py'
     )
     parser.add_argument(
         '-t', '--topicId',
-        required=False, type=str
+        required=False, type=str,
     )
     parser.add_argument(
         '-r', '--regionCode',
-        required=False, type=str, default='US'
+        required=False, type=str, default='US',
     )
     parser.add_argument(
         '-d', '--videoDuration',
@@ -148,7 +154,7 @@ def command_parser():
     )
     parser.add_argument(
         '-pt', '--pageToken',
-        required=False, type=str
+        required=False, type=str,
     )
     return parser.parse_known_args()
 
@@ -181,7 +187,7 @@ def main():
     args, unknown = command_parser()
 
     api_args = vars(args)
-    dest = api_args.pop('destination')
+    dest = api_args.pop('output')
     api_args['q'] = category_title_by_language(category_id=args.videoCategoryId,
                                                hl=args.relevanceLanguage,
                                                region_code=args.regionCode)
