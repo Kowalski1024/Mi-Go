@@ -6,5 +6,5 @@
 docker build -t model-tester .
 ```
 ```shell
-docker run --gpus all -d --name whisper-tester -it model-tester -e GoogleAPI=<YOUR KEY>
+docker run  -e GoogleAPI=<YOUR KEY> --gpus all -d --name whisper-tester -it model-tester
 ```
