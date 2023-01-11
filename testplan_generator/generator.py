@@ -187,7 +187,7 @@ def main():
     args, unknown = command_parser()
 
     api_args = vars(args)
-    dest = api_args.pop('output')
+    dest = api_args.pop('outputDirectory')
     api_args['q'] = category_title_by_language(category_id=args.videoCategoryId,
                                                hl=args.relevanceLanguage,
                                                region_code=args.regionCode)
