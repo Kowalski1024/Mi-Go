@@ -117,6 +117,7 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
     filename = f'{category}_{language}_{page_token}_{time_str}.json'
 
     path = Path(destination).joinpath(filename)
+    path.parent.mkdir(exist_ok=True)
 
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=4, sort_keys=True)
