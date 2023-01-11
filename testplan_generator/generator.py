@@ -9,7 +9,7 @@ import os
 from youtube_transcript_api import YouTubeTranscriptApi
 import googleapiclient.discovery
 
-from generator.categories import CATEGORIES
+from testplan_generator.categories import CATEGORIES
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"

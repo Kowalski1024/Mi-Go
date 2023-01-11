@@ -7,7 +7,7 @@ import time
 
 from loguru import logger
 
-from generator.generator import test_iterator
+from testplan_generator.generator import test_iterator
 
 
 class TestBase:
