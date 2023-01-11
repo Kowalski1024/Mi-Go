@@ -126,7 +126,7 @@ def command_parser():
     parser = argparse.ArgumentParser(prog="Testplan generator", description="Generating json files used as testplan")
     parser.add_argument('maxResults', type=int)
     parser.add_argument(
-        '-d', '--destination',
+        '-o', '--outputDirectory',
         required=False, type=str, default='./testplans/',
         help='Destination of the testplan'
     )
