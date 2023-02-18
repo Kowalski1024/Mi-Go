@@ -15,7 +15,7 @@ class is designed to be flexible and customizable, allowing users to define spec
 
 ## Test plan generation
 
-IThe framework uses test plans generated
+The framework uses test plans generated
 by [generator](https://github.com/Kowalski1024/speech-to-text-tester/blob/master/testplan_generator/generator.py) that
 allows users to
 specify the number of videos in the test, video category, and other relevant parameters. The generator collects videos
