@@ -13,6 +13,9 @@ functions in the [lib folder](https://github.com/Kowalski1024/speech-to-text-tes
 TestBase class that users can use to create new tests. The TestBase
 class is designed to be flexible and customizable, allowing users to define specific steps when processing a video.
 
+At the moment, the framework is designed for testing [Whisper](https://github.com/openai/whisper), an open source model
+from OpenAI.
+
 ## Test plan generation
 
 The framework uses test plans generated
