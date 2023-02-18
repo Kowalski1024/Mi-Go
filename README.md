@@ -1,6 +1,6 @@
 # Speech-to-text model tester
 
-This framework is designed to make it easy for researchers and developers to evaluate the accuracy of their speech to
+This framework is designed to make it easy for researchers and developers to evaluate the accuracy of speech to
 text models using YouTube videos. It takes the audio of the video and the subtitles added by the user, then processes
 the audio through the speech to text model to get transcriptions, and compares them with the subtitles added by the
 user.
