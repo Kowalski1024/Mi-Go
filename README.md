@@ -16,7 +16,7 @@ class is designed to be flexible and customizable, allowing users to define spec
 At the moment, the framework is designed for testing [Whisper](https://github.com/openai/whisper), an open source model
 from OpenAI.
 
-![Schema](https://github.com/Kowalski1024/speech-to-text-tester/tree/master/schema.png)
+![Schema](https://github.com/Kowalski1024/speech-to-text-tester/blob/master/schema.png)
 
 ## Test plan generation
 
