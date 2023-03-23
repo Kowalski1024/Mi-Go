@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS ManuallyCreatedTranscripts (
     FOREIGN KEY (id) REFERENCES Video(id)
 );
 
--- Transcript diff
+-- TranscriptDifference
 CREATE TABLE IF NOT EXISTS TranscriptDiffResults (
     id INTEGER PRIMARY KEY,
     wer FLOAT,

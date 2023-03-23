@@ -1,1 +1,1 @@
-from db.db import insert_transcript_diff_results
+from db.youtube_db import insert_transcript_diff_results

@@ -60,12 +60,12 @@ docker run  -e GoogleAPI=<YOUR KEY> --gpus all -d --name whisper-tester -it mode
 Testplan generation
 
 ```shell
-python testplan_generator/testplan_generator.py 2 -o ./testplans -c 28 -l en
+python generators/generators.py 2 -o ./testplans -c 28 -l en
 ```
 
 Run test
 
 ```shell
-python tests/transcript_diff.py base "/app/testplans/<TESTFILE>" -it 2
+python testrunners/transcript_diff.py base "/app/testplans/<TESTFILE>" -it 2
 ```
 

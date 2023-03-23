@@ -9,7 +9,7 @@ import os
 from youtube_transcript_api import YouTubeTranscriptApi
 import googleapiclient.discovery
 
-from testplan_generator.categories import CATEGORIES
+from generators.categories import CATEGORIES
 
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
@@ -171,17 +171,6 @@ def generate(args: dict) -> dict:
     add_video_details(items)
 
     return parsed_results
-
-
-def test_iterator(testplan: dict, iterations: int = 5) -> Iterable[dict]:
-    yield testplan
-
-    for _ in range(iterations-1):
-        args = testplan['args']
-        args['pageToken'] = testplan['nextPageToken']
-        testplan = generate(args)
-
-        yield testplan
 
 
 def main():
