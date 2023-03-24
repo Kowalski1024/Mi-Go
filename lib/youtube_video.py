@@ -43,7 +43,13 @@ class YouTubeVideo:
 
             r = re.compile(f"{language}|{language}-*")
             srt = sorted(scr, key=len)
-            return list(filter(r.match, srt))[0]
+
+            matches = list(filter(r.match, srt))
+
+            if not matches:
+                raise ValueError(f"No similar language {language} found in {srt}")
+
+            return matches[0]
 
         transcripts = YouTubeTranscriptApi.list_transcripts(self.videoId)
 
