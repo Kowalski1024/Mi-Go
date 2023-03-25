@@ -1,16 +1,14 @@
-from typing import Union, Iterable
 from pathlib import Path
+from functools import lru_cache
+import pprint
 import argparse
-import copy
 import time
 import json
 import os
 
 from youtube_transcript_api import YouTubeTranscriptApi
+from loguru import logger
 import googleapiclient.discovery
-
-from generators.categories import CATEGORIES
-
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 api_key = os.environ.get("GoogleAPI")
@@ -22,6 +20,7 @@ youtube_api = googleapiclient.discovery.build(api_service_name, api_version, dev
 
 
 def videos_details_request(videos: list):
+    logger.info("Request videos details")
     request = youtube_api.videos().list(
         part="contentDetails,snippet",
         id=','.join(videos)
@@ -30,7 +29,9 @@ def videos_details_request(videos: list):
     return request.execute()
 
 
+@lru_cache
 def categories_request(hl: str, region_code: str):
+    logger.info("Request categories")
     request = youtube_api.videoCategories().list(
         part="snippet",
         hl=hl,
@@ -40,12 +41,18 @@ def categories_request(hl: str, region_code: str):
     return request.execute()
 
 
-def search_request(args: dict):
+def assignable_categories(hl: str, region_code: str) -> dict[int, str]:
+    results = categories_request(hl, region_code)
+    return {int(res['id']): res['snippet']['title'] for res in results['items'] if res['snippet']['assignable']}
+
+
+def search_request(args: dict, part: str = "snippet", video_type: str = "video", caption: str = "closedCaption"):
+    logger.info(f"Request search with args: part={part}, type={video_type}, videoCaption={caption} and {args}")
     request = youtube_api.search().list(
         **args,
-        part="snippet",
-        type="video",
-        videoCaption="closedCaption",
+        part=part,
+        type=video_type,
+        videoCaption=caption,
     )
     response = request.execute()
     response['videoCategoryId'] = args['videoCategoryId']
@@ -54,7 +61,14 @@ def search_request(args: dict):
 
 
 def results_parser(results: dict):
+    logger.info("Parsing results")
     keys = {'videoId', 'channelId', 'channelTitle', 'publishTime', 'title'}
+
+    if n := len(results['items']):
+        logger.info(f"{n} results found")
+    else:
+        logger.error(f"{n} results found")
+
     for video in results['items']:
         video: dict
         dicts = [value for key, value in video.items() if isinstance(value, dict)]
@@ -87,6 +101,7 @@ def add_video_details(videos):
 
 
 def add_transcripts_info(items: list):
+    logger.info("Adding transcript info")
     for video in items:
         video_id = video['videoId']
         transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
@@ -94,24 +109,15 @@ def add_transcripts_info(items: list):
         video['generatedTranscripts'] = list(transcripts._generated_transcripts.keys())
 
 
-def category_title_by_language(category_id: int, hl: str, region_code: str = 'US'):
-    for category in categories_request(hl, region_code)['items']:
-        if category['id'] == category_id:
-            return category['snippet'].get('title', None)
-
-    return None
-
-
-def save_as_json(results: dict, destination: Union[str, os.PathLike]):
+def save_as_json(results: dict, destination: os.PathLike, category: str):
     args = results.get('args')
-    category_id = int(args.get('videoCategoryId'))
     language = args.get('relevanceLanguage')
     page_token = args.get('pageToken')
 
     if page_token is None:
         page_token = 'CAUQAQ'
 
-    category = CATEGORIES[category_id].replace(' ', '')
+    category = category.replace(' ', '')
     time_str = time.strftime("%Y%m%d-%H%M%S")
 
     filename = f'{category}_{language}_{page_token}_{time_str}.json'
@@ -119,6 +125,7 @@ def save_as_json(results: dict, destination: Union[str, os.PathLike]):
     path = Path(destination).joinpath(filename)
     path.parent.mkdir(exist_ok=True)
 
+    logger.info(f"Saving results to json file at {path}")
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(results, f, ensure_ascii=False, indent=4, sort_keys=True)
 
@@ -154,6 +161,10 @@ def command_parser():
         required=False, type=str, default='medium', choices=['any', 'long', 'medium', ' short']
     )
     parser.add_argument(
+        '-q', '--queryTerm',
+        required=False, type=str, dest='q'
+    )
+    parser.add_argument(
         '-pt', '--pageToken',
         required=False, type=str,
     )
@@ -161,6 +172,7 @@ def command_parser():
 
 
 def generate(args: dict) -> dict:
+    logger.info(f"Generating with args: {args}")
     search_results = search_request(args)
     parsed_results = results_parser(search_results)
 
@@ -178,13 +190,20 @@ def main():
 
     api_args = vars(args)
     dest = api_args.pop('outputDirectory')
-    api_args['q'] = category_title_by_language(category_id=args.videoCategoryId,
-                                               hl=args.relevanceLanguage,
-                                               region_code=args.regionCode)
+    categories = assignable_categories(hl=args.relevanceLanguage, region_code=args.regionCode)
+    category_id = int(args.videoCategoryId)
+
+    if category_id not in categories:
+        raise ValueError(f"CategoryId {category_id} is not assignable, available categories:\n"
+                         f"{pprint.pformat(categories)}"
+                         )
+
+    if api_args.get('queryTerm', None) is None:
+        api_args['q'] = categories.get(category_id, None)
 
     search_results = generate(api_args)
 
-    save_as_json(results=search_results, destination=dest)
+    save_as_json(results=search_results, destination=dest, category=categories[category_id])
 
 
 if __name__ == "__main__":

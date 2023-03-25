@@ -47,7 +47,7 @@ class YouTubeTestRunner(TestRunnerBase):
 
         for i in range(self._iterations):
             logger.info(f"Starting {i + 1}/{self._iterations} testplan")
-            logger.info(f"Testplan args: {testplan['args']}, PageToken: ")
+            logger.info(f"Testplan args: {testplan['args']}")
 
             for idx, video_details in enumerate(self.video_details(testplan)):
                 logger.info(
@@ -61,14 +61,14 @@ class YouTubeTestRunner(TestRunnerBase):
                     model_transcript = self.tester.transcribe(audio)
                 except TimeoutError as e:
                     logger.warning(f"Skipping the video {video.videoId}, TimeoutError (model transcript): {e}")
-                    video_details['Error'] = f"TimeoutError (model transcript): {e}"
+                    video_details['error'] = f"TimeoutError (model transcript): {e}"
                     continue
 
                 try:
                     target_transcript = video.youtube_transcript(self.tester.language)
                 except ValueError as e:
                     logger.warning(f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}")
-                    video_details['Error'] = f"ValueError (youtube transcript): {e}"
+                    video_details['error'] = f"ValueError (youtube transcript): {e}"
                     continue
 
                 results = self.tester.compare(model_transcript, target_transcript)

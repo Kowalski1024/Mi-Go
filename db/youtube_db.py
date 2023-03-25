@@ -113,6 +113,9 @@ def insert_transcript_diff_results(testplan: dict):
     request_id = _insert_testplan_basic_data(testplan)
 
     for video in testplan['items']:
+        if 'error' in video:
+            continue
+
         video_id = _insert_video(request_id, video)
 
         results = video.pop('results')
