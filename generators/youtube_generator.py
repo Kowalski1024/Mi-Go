@@ -172,7 +172,7 @@ def command_parser():
 
 
 def generate(args: dict) -> dict:
-    logger.info(f"Generating with args: {args}")
+    logger.info(f"Generating with args:\n{pprint.pformat(args)}")
     search_results = search_request(args)
     parsed_results = results_parser(search_results)
 

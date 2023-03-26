@@ -2,6 +2,7 @@ from typing import Iterable
 import argparse
 from pathlib import Path
 from os import PathLike
+import pprint
 import json
 import os
 import time
@@ -47,7 +48,7 @@ class YouTubeTestRunner(TestRunnerBase):
 
         for i in range(self._iterations):
             logger.info(f"Starting {i + 1}/{self._iterations} testplan")
-            logger.info(f"Testplan args: {testplan['args']}")
+            logger.info(f"Testplan args:\n{pprint.pformat(testplan['args'])}")
 
             for idx, video_details in enumerate(self.video_details(testplan)):
                 logger.info(

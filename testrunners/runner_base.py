@@ -1,4 +1,5 @@
 import argparse
+import pprint
 from collections import defaultdict
 
 from loguru import logger
@@ -36,7 +37,7 @@ class TestRunnerBase:
     @classmethod
     def from_command_line(cls):
         args, unknown = cls.parser().parse_known_args()
-        logger.info(f"Command line args: {vars(args)}")
+        logger.info(f"Command line args:\n{pprint.pformat(vars(args))}")
         tester = [x for x in TestRegistry.get_registry(cls) if x.__name__ == args.test_class][0]
         logger.info(f"Chosen tester name: {tester.__name__}")
         return cls(**vars(args), tester=tester(**vars(args)))
