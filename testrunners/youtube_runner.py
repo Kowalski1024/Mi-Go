@@ -19,15 +19,15 @@ class YouTubeTestRunner(TestRunnerBase):
     def __init__(self,
                  testplan_path: PathLike,
                  audio_dir: PathLike,
-                 transcript_dir: PathLike = None,
                  iterations: int = 1,
+                 save_transcripts: bool = False,
                  **kwargs):
         super().__init__(**kwargs)
 
         self._audio_dir = Path(audio_dir)
-        self._transcript_dir = Path(transcript_dir)
         self._testplan_path = Path(testplan_path)
         self._iterations = iterations
+        self._save_transcripts = save_transcripts
 
     def run(self):
         if self.tester.transcriber is None:
@@ -74,6 +74,10 @@ class YouTubeTestRunner(TestRunnerBase):
                 results = self.tester.compare(model_transcript, target_transcript)
                 video_details['results'] = results
 
+                if self._save_transcripts:
+                    video_details['modelTranscript'] = model_transcript
+                    video_details['targetTranscript'] = target_transcript
+
             self.save_results(testplan)
             self.tester.testplan_postprocess(testplan)
 
@@ -109,8 +113,8 @@ class YouTubeTestRunner(TestRunnerBase):
         )
 
         parser.add_argument(
-            '-tp', '--transcript-path',
-            required=False, type=str, default='./cache/transcript', dest='transcript_dir',
+            '-st', '--save-transcript',
+            required=False, action='store_true', dest='save_transcripts', default=False
         )
 
         parser.add_argument(
