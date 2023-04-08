@@ -95,12 +95,12 @@ def _insert_video(request_id: int, video: dict) -> int:
 
 
 def insert_transcript_diff_results(testplan: dict) -> None:
-    '''
+    """
     Insert transcript diff results to database
 
     Args:
         testplan: testplan to insert
-    '''
+    """
 
     testplan = copy.deepcopy(testplan)
 

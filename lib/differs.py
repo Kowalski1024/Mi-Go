@@ -2,7 +2,7 @@ from difflib import SequenceMatcher
 
 
 def differ(model_transcript: str, yt_transcript: str) -> dict:
-    '''
+    """
     Basic differ, returns the number of substitutions, insertions, deletions and the wer.
     Uses the SequenceMatcher from difflib
 
@@ -12,7 +12,7 @@ def differ(model_transcript: str, yt_transcript: str) -> dict:
 
     Returns:
         dict with the results of the comparison
-    '''
+    """
     
     results = {'replace': [], 'delete': [], 'insert': []}
 

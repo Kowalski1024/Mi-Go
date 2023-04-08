@@ -3,7 +3,7 @@ import re
 
 
 def title_normalizer(string, allow_unicode=False) -> str:
-    '''
+    """
     Normalizes a string to be used as a title
 
     Args:
@@ -12,7 +12,7 @@ def title_normalizer(string, allow_unicode=False) -> str:
 
     Returns:
         normalized string
-    '''
+    """
 
     string = str(string)
     # remove all non-ascii characters

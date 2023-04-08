@@ -8,20 +8,20 @@ from testrunners.tests import TranscriptTestBase
 
 
 class TestRegistry:
-    '''
+    """
     Registry for tests, use this to register tests in the test runners
-    '''
+    """
 
     _registry = defaultdict(list)
 
     @classmethod
     def register(cls, *tests) -> callable:
-        '''
+        """
         Decorator for registering tests
 
         Args:
             tests: tests to register
-        '''
+        """
 
         def _register_test(test_runner):
             cls._registry[test_runner].extend(tests)
@@ -31,7 +31,7 @@ class TestRegistry:
 
     @classmethod
     def get_registry(cls, test_runner) -> list[TranscriptTestBase]:
-        '''
+        """
         Get the registry for a test runner
 
         Args:
@@ -39,39 +39,39 @@ class TestRegistry:
 
         Returns:
             registry for the test runner
-        '''
+        """
         return cls._registry[test_runner]
 
 
 class TestRunnerBase:
-    '''
+    """
     Base class for test runners, all test runners should inherit from this class
-    '''
+    """
 
     def __init__(self, tester: TranscriptTestBase, **kwargs):
         self.tester = tester
 
     def run(self) -> None:
-        '''
+        """
         Main method for running the test
-        '''
+        """
         raise NotImplementedError
 
     @staticmethod
     def runner_args(parser: argparse.ArgumentParser) -> None:
-        '''
+        """
         Use this method to add arguments to the parser
 
         Args:
             parser: parser to add arguments to
-        '''
+        """
         pass
 
     @classmethod
     def from_command_line(cls) -> 'TestRunnerBase':
-        '''
+        """
         Creates a test runner from command line arguments
-        '''
+        """
 
         args, unknown = cls.parser().parse_known_args()
         logger.info(f"Command line args:\n{pprint.pformat(vars(args))}")
@@ -84,9 +84,9 @@ class TestRunnerBase:
 
     @classmethod
     def parser(cls) -> argparse.ArgumentParser:
-        '''
+        """
         Creates a parser for the test runner
-        '''
+        """
         
         parser = argparse.ArgumentParser()
         cls.runner_args(parser)

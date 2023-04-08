@@ -12,9 +12,10 @@ from lib.normalizers import title_normalizer
 
 @dataclasses.dataclass
 class YouTubeVideo:
-    '''
+    """
     Class to represent a YouTube video
-    '''
+    """
+
     title: str
     videoId: str
     defaultAudioLanguage: str
@@ -22,7 +23,7 @@ class YouTubeVideo:
     manuallyCreatedTranscripts: list
 
     def download_mp3(self, destination: Path) -> Path:
-        '''
+        """
         Download video as mp3
 
         Args:
@@ -30,7 +31,7 @@ class YouTubeVideo:
 
         Returns:
             Path to downloaded file
-        '''
+        """
 
         title = title_normalizer(self.title)
         url = f'https://www.youtube.com/watch?v={self.videoId}'
@@ -42,7 +43,7 @@ class YouTubeVideo:
         return destination.joinpath(f'{title}.mp3')
 
     def youtube_transcript(self, language: str, generated: bool = False) -> str:
-        '''
+        """
         Download transcript from YouTube
 
         Args:
@@ -51,7 +52,7 @@ class YouTubeVideo:
 
         Returns:
             Transcript as string
-        '''
+        """
 
         def _find(scr: list) -> str:
             # find transcript with similar language
@@ -91,7 +92,7 @@ class YouTubeVideo:
 
     @classmethod
     def from_dict(cls, data: dict) -> 'YouTubeVideo':
-        '''
+        """
         Create YouTubeVideo object from dict
 
         Args:
@@ -99,7 +100,7 @@ class YouTubeVideo:
 
         Returns:
             YouTubeVideo object
-        '''
+        """
 
         kwargs = [data[key] for key in YouTubeVideo.fields()]
         
@@ -107,9 +108,9 @@ class YouTubeVideo:
 
     @classmethod
     def fields(cls):
-        '''
+        """
         Get fields of dataclass
-        '''
+        """
 
         return [field.name for field in dataclasses.fields(cls)]
 
