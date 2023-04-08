@@ -13,13 +13,25 @@ import googleapiclient.discovery
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 api_key = os.environ.get("GoogleAPI")
 
+# Youtube API constants
 api_service_name = "youtube"
 api_version = "v3"
 
+# Initialize the Youtube API
 youtube_api = googleapiclient.discovery.build(api_service_name, api_version, developerKey=api_key)
 
 
-def videos_details_request(videos: list):
+def videos_details_request(videos: list) -> dict:
+    '''
+    Request video details from youtube api
+
+    Args:
+        videos: list of video ids
+
+    Returns:
+        response from youtube api
+    '''
+
     logger.info("Request videos details")
     request = youtube_api.videos().list(
         part="contentDetails,snippet",
@@ -30,7 +42,18 @@ def videos_details_request(videos: list):
 
 
 @lru_cache
-def categories_request(hl: str, region_code: str):
+def categories_request(hl: str, region_code: str) -> dict:
+    '''
+    Request categories from youtube api
+
+    Args:
+        hl: language
+        region_code: region code
+
+    Returns:
+        response from youtube api
+    '''
+
     logger.info("Request categories")
     request = youtube_api.videoCategories().list(
         part="snippet",
@@ -42,11 +65,35 @@ def categories_request(hl: str, region_code: str):
 
 
 def assignable_categories(hl: str, region_code: str) -> dict[int, str]:
+    '''
+    Get assignable categories from youtube api
+
+    Args:
+        hl: language
+        region_code: region code
+
+    Returns:
+        dictionary of assignable categories
+    '''
+
     results = categories_request(hl, region_code)
     return {int(res['id']): res['snippet']['title'] for res in results['items'] if res['snippet']['assignable']}
 
 
-def search_request(args: dict, part: str = "snippet", video_type: str = "video", caption: str = "closedCaption"):
+def search_request(args: dict, part: str = "snippet", video_type: str = "video", caption: str = "closedCaption") -> dict:
+    '''
+    Request search from youtube api
+
+    Args:
+        args: arguments for search request
+        part: search response properties
+        video_type: accepted types - any, episode, movie
+        caption: accepted captions - any, closedCaption, none
+
+    Returns:
+        response from youtube api
+    '''
+
     logger.info(f"Request search with args: part={part}, type={video_type}, videoCaption={caption} and {args}")
     request = youtube_api.search().list(
         **args,
@@ -60,8 +107,20 @@ def search_request(args: dict, part: str = "snippet", video_type: str = "video",
     return response
 
 
-def results_parser(results: dict):
+def results_parser(results: dict) -> dict:
+    '''
+    Parse search results from youtube api to get only necessary data for testplan
+
+    Args:
+        results: response from youtube api
+
+    Returns:
+        parsed results
+    '''
+
     logger.info("Parsing results")
+
+    # necessary keys
     keys = {'videoId', 'channelId', 'channelTitle', 'publishTime', 'title'}
 
     if n := len(results['items']):
@@ -69,6 +128,7 @@ def results_parser(results: dict):
     else:
         logger.error(f"{n} results found")
 
+    # flatten nested dictionaries
     for video in results['items']:
         video: dict
         dicts = [value for key, value in video.items() if isinstance(value, dict)]
@@ -76,6 +136,7 @@ def results_parser(results: dict):
         for d in dicts:
             video.update(d)
 
+        # remove unnecessary keys
         for key in set(video).difference(keys):
             video.pop(key, None)
 
@@ -85,7 +146,14 @@ def results_parser(results: dict):
     return results
 
 
-def add_video_details(videos):
+def add_video_details(videos) -> None:
+    '''
+    Add duration and audio language to search results
+
+    Args:
+        videos: list of videos
+    '''
+
     video_ids = [video['videoId'] for video in videos]
     response = videos_details_request(video_ids)
 
@@ -100,7 +168,14 @@ def add_video_details(videos):
             raise KeyError
 
 
-def add_transcripts_info(items: list):
+def add_transcripts_info(items: list) -> None:
+    '''
+    Add manually created and generated transcripts to search results
+
+    Args:
+        items: list of videos
+    '''
+
     logger.info("Adding transcript info")
     for video in items:
         video_id = video['videoId']
@@ -109,11 +184,21 @@ def add_transcripts_info(items: list):
         video['generatedTranscripts'] = list(transcripts._generated_transcripts.keys())
 
 
-def save_as_json(results: dict, destination: os.PathLike, category: str):
+def save_as_json(results: dict, destination: os.PathLike, category: str) -> None:
+    '''
+    Save results to json file
+
+    Args:
+        results: results to save
+        destination: destination directory
+        category: category of videos
+    '''
+
     args = results.get('args')
     language = args.get('relevanceLanguage')
     page_token = args.get('pageToken')
 
+    # default page token
     if page_token is None:
         page_token = 'CAUQAQ'
 
@@ -130,7 +215,14 @@ def save_as_json(results: dict, destination: os.PathLike, category: str):
         json.dump(results, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
-def command_parser():
+def command_parser() -> argparse.ArgumentParser:
+    '''
+    Parse command line arguments
+
+    Returns:
+        parsed arguments
+    '''
+
     parser = argparse.ArgumentParser(prog="Testplan generator", description="Generating json files used as testplan")
     parser.add_argument('maxResults', type=int)
     parser.add_argument(
@@ -172,6 +264,16 @@ def command_parser():
 
 
 def generate(args: dict) -> dict:
+    '''
+    Generate testplan
+
+    Args:
+        args: arguments for youtube api
+
+    Returns:
+        parsed results
+    '''
+
     logger.info(f"Generating with args:\n{pprint.pformat(args)}")
     search_results = search_request(args)
     parsed_results = results_parser(search_results)
@@ -193,6 +295,7 @@ def main():
     categories = assignable_categories(hl=args.relevanceLanguage, region_code=args.regionCode)
     category_id = int(args.videoCategoryId)
 
+    # check if category id is assignable
     if category_id not in categories:
         raise ValueError(f"CategoryId {category_id} is not assignable, available categories:\n"
                          f"{pprint.pformat(categories)}"

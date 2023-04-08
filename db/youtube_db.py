@@ -3,20 +3,25 @@ import sqlite3
 
 conn = sqlite3.connect('db.sqlite')
 
+# Create tables
 with open('./db/youtube_create.sql', 'r') as sql_file, conn:
     sql_script = sql_file.read()
     conn.cursor().executescript(sql_script)
 
 
 def _sql_insert(table: str, columns: list) -> str:
+    # Create sql insert statement
+
     return f'''
         INSERT INTO {table} ({', '.join(columns)}) VALUES ({', '.join('?' * len(columns))})
         '''
 
 
 def _insert_testplan_basic_data(testplan: dict) -> int:
+    # Insert basic data about testplan
     testplan = copy.deepcopy(testplan)
 
+    # Keys for testplan table
     testplan_keys = [
         'nextPageToken',
         'regionCode',
@@ -52,8 +57,10 @@ def _insert_testplan_basic_data(testplan: dict) -> int:
 
 
 def _insert_video(request_id: int, video: dict) -> int:
+    # Insert video data
     video = copy.deepcopy(video)
 
+    # Keys for video table
     video_keys = [
         'videoId',
         'requestId',
@@ -87,9 +94,17 @@ def _insert_video(request_id: int, video: dict) -> int:
     return row_id
 
 
-def insert_transcript_diff_results(testplan: dict):
+def insert_transcript_diff_results(testplan: dict) -> None:
+    '''
+    Insert transcript diff results to database
+
+    Args:
+        testplan: testplan to insert
+    '''
+
     testplan = copy.deepcopy(testplan)
 
+    # Keys for results table
     results_keys = [
         'id',
         'wer',
@@ -110,14 +125,18 @@ def insert_transcript_diff_results(testplan: dict):
         'operation'
     ]
 
+    # Insert basic data about testplan
     request_id = _insert_testplan_basic_data(testplan)
 
     for video in testplan['items']:
+        # Skip videos with errors
         if 'error' in video:
             continue
 
+        # Insert video data
         video_id = _insert_video(request_id, video)
 
+        # Remove keys that are not in results table
         results = video.pop('results')
         replace = results.pop('replace')
         insert = results.pop('insert')
