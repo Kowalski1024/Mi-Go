@@ -14,7 +14,7 @@ class TranscriptTest:
         self.transcriber: Optional[Callable] = None
 
         # normalizer is a function that takes a transcript and returns a normalized transcript
-        # see lib/normalizers.py for examples
+        # see libs/normalizers.py for examples
         self.normalizer: Optional[Callable] = None
         self.language: str = 'en'
 

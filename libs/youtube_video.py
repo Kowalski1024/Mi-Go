@@ -7,7 +7,7 @@ from pytube import YouTube
 from loguru import logger
 
 
-from lib.normalizers import title_normalizer
+from libs.normalizers import title_normalizer
 
 
 @dataclasses.dataclass

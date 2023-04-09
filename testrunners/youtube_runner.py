@@ -9,7 +9,7 @@ import time
 
 from loguru import logger
 
-from lib.youtube_video import YouTubeVideo
+from libs.youtube_video import YouTubeVideo
 from testrunners import TestRunner, TestRegistry
 from testrunners.tests.tests import TranscriptDifference
 from generators.youtube_generator import generate

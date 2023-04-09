@@ -5,7 +5,7 @@ import whisper
 from whisper.normalizers import EnglishTextNormalizer
 
 from testrunners.tests import TranscriptTest
-from lib.differs import differ
+from libs.differs import differ
 import databases
 
 
