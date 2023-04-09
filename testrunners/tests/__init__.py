@@ -1,1 +1,1 @@
-from testrunners.tests.test_base import TranscriptTestBase
+from testrunners.tests.transcript_test import TranscriptTest

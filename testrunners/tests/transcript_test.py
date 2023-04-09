@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 
 
-class TranscriptTestBase:
+class TranscriptTest:
     """
     Base class for transcript tests, all transcript tests should inherit from this class
     """

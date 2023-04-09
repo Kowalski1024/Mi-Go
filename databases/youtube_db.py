@@ -1,10 +1,10 @@
 import copy
 import sqlite3
 
-conn = sqlite3.connect('db.sqlite')
+conn = sqlite3.connect('databases.sqlite')
 
 # Create tables
-with open('./db/youtube_create.sql', 'r') as sql_file, conn:
+with open('./databases/youtube_create.sql', 'r') as sql_file, conn:
     sql_script = sql_file.read()
     conn.cursor().executescript(sql_script)
 

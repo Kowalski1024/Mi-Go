@@ -4,12 +4,12 @@ from pathlib import Path
 import whisper
 from whisper.normalizers import EnglishTextNormalizer
 
-from testrunners.tests import TranscriptTestBase
+from testrunners.tests import TranscriptTest
 from lib.differs import differ
-import db
+import databases
 
 
-class TranscriptDifference(TranscriptTestBase):
+class TranscriptDifference(TranscriptTest):
     """
     Test to evaluate the difference between the model transcript and the target transcript
     """
@@ -73,7 +73,7 @@ class TranscriptDifference(TranscriptTestBase):
             'name': self.model_type
         }
 
-        db.insert_transcript_diff_results(testplan)
+        databases.insert_transcript_diff_results(testplan)
 
     @staticmethod
     def subparser(subparser: argparse.ArgumentParser):

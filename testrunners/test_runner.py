@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from loguru import logger
 
-from testrunners.tests import TranscriptTestBase
+from testrunners.tests import TranscriptTest
 
 
 class TestRegistry:
@@ -30,7 +30,7 @@ class TestRegistry:
         return _register_test
 
     @classmethod
-    def get_registry(cls, test_runner) -> list[TranscriptTestBase]:
+    def get_registry(cls, test_runner) -> list[TranscriptTest]:
         """
         Get the registry for a test runner
 
@@ -43,12 +43,12 @@ class TestRegistry:
         return cls._registry[test_runner]
 
 
-class TestRunnerBase:
+class TestRunner:
     """
     Base class for test runners, all test runners should inherit from this class
     """
 
-    def __init__(self, tester: TranscriptTestBase, **kwargs):
+    def __init__(self, tester: TranscriptTest, **kwargs):
         self.tester = tester
 
     def run(self) -> None:
@@ -68,7 +68,7 @@ class TestRunnerBase:
         pass
 
     @classmethod
-    def from_command_line(cls) -> 'TestRunnerBase':
+    def from_command_line(cls) -> 'TestRunner':
         """
         Creates a test runner from command line arguments
         """

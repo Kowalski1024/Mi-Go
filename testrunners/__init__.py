@@ -1,1 +1,1 @@
-from testrunners.runner_base import TestRunnerBase, TestRegistry
+from testrunners.test_runner import TestRunner, TestRegistry
