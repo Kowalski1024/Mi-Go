@@ -125,8 +125,20 @@ def insert_transcript_diff_results(testplan: dict) -> None:
         'operation'
     ]
 
+    additional_data_keys = [
+        'id',
+        'model'
+    ]
+
     # Insert basic data about testplan
     request_id = _insert_testplan_basic_data(testplan)
+
+    # Insert additional data
+    with conn:
+        cursor = conn.cursor()
+
+        values = (request_id, ) + tuple(val for key, val in testplan.items() if key in additional_data_keys)
+        cursor.execute(_sql_insert('TranscriptDiffAdditional', additional_data_keys), values)
 
     for video in testplan['items']:
         # Skip videos with errors
@@ -145,7 +157,7 @@ def insert_transcript_diff_results(testplan: dict) -> None:
         with conn:
             cursor = conn.cursor()
 
-            values = [results.get(key, None) for key in results_keys]
+            values = (video_id,) + tuple(val for key, val in results.items() if key in results_keys)
             cursor.execute(_sql_insert('TranscriptDiffResults', results_keys), values)
 
             values = [(video_id, model, yt) for model, yt in replace]

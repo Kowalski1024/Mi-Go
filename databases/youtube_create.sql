@@ -68,5 +68,11 @@ CREATE TABLE IF NOT EXISTS TranscriptDiffInsertDelete (
     FOREIGN KEY (id) REFERENCES Video(id)
 );
 
+CREATE TABLE IF NOT EXISTS TranscriptDiffAdditional (
+    id INTEGER,
+    model TEXT,
+    FOREIGN KEY (id) REFERENCES Request(requestId)
+);
+
 
 

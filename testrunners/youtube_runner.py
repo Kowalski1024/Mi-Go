@@ -91,8 +91,8 @@ class YouTubeTestRunner(TestRunner):
                     video_details['modelTranscript'] = model_transcript
                     video_details['targetTranscript'] = target_transcript
 
-            self.save_results(testplan)
             self.tester.testplan_postprocess(testplan)
+            self.save_results(testplan)
 
             # generate a new testplan if we need to
             if i+1 < self._iterations:
