@@ -13,6 +13,7 @@ class TranscriptDifference(TranscriptTest):
     """
     Test to evaluate the difference between the model transcript and the target transcript
     """
+
     def __init__(self, model_type: str, **kwargs):
         super().__init__(**kwargs)
         self.model_type = model_type
@@ -34,12 +35,12 @@ class TranscriptDifference(TranscriptTest):
         """
 
         results = self.transcriber(audio=str(audio_path), verbose=False)
-        self.language = results['language']
+        self.language = results["language"]
 
         if remove_audio:
             audio_path.unlink()
 
-        return results['text']
+        return results["text"]
 
     def compare(self, model_transcript, target_transcript) -> dict:
         """
@@ -57,7 +58,7 @@ class TranscriptDifference(TranscriptTest):
         normalized_target = self.normalizer(target_transcript)
 
         differ_results = differ(normalized_model, normalized_target)
-        differ_results['detectedLanguage'] = self.language
+        differ_results["detectedLanguage"] = self.language
 
         return differ_results
 
@@ -69,9 +70,7 @@ class TranscriptDifference(TranscriptTest):
             testplan: testplan to postprocess
         """
 
-        testplan['model'] = {
-            'name': self.model_type
-        }
+        testplan["model"] = {"name": self.model_type}
 
         databases.insert_transcript_diff_results(testplan)
 
@@ -83,9 +82,24 @@ class TranscriptDifference(TranscriptTest):
         Args:
             subparser: parser to add arguments to
         """
-        
-        model_types = ['tiny', 'base', 'small', 'medium', 'large', 'tiny.en', 'base.en', 'small.en', 'medium.en']
 
-        subparser.add_argument('-m', '--model-type',
-                               type=str, dest='model_type', choices=model_types, required=True
-                               )
+        model_types = [
+            "tiny",
+            "base",
+            "small",
+            "medium",
+            "large",
+            "tiny.en",
+            "base.en",
+            "small.en",
+            "medium.en",
+        ]
+
+        subparser.add_argument(
+            "-m",
+            "--model-type",
+            type=str,
+            dest="model_type",
+            choices=model_types,
+            required=True,
+        )

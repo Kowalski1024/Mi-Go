@@ -17,10 +17,14 @@ def title_normalizer(string, allow_unicode=False) -> str:
     string = str(string)
     # remove all non-ascii characters
     if allow_unicode:
-        string = unicodedata.normalize('NFKC', string)
+        string = unicodedata.normalize("NFKC", string)
     else:
-        string = unicodedata.normalize('NFKD', string).encode('ascii', 'ignore').decode('ascii')
+        string = (
+            unicodedata.normalize("NFKD", string)
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
 
-    string = re.sub(r'[^\w\s-]', '', string.lower())
-    
-    return re.sub(r'[-\s]+', '-', string).strip('-_')
+    string = re.sub(r"[^\w\s-]", "", string.lower())
+
+    return re.sub(r"[-\s]+", "-", string).strip("-_")

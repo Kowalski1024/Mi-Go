@@ -13,8 +13,8 @@ def differ(model_transcript: str, yt_transcript: str) -> dict:
     Returns:
         dict with the results of the comparison
     """
-    
-    results = {'replace': [], 'delete': [], 'insert': []}
+
+    results = {"replace": [], "delete": [], "insert": []}
 
     # split the transcripts into words
     model_set = model_transcript.split()
@@ -25,19 +25,19 @@ def differ(model_transcript: str, yt_transcript: str) -> dict:
 
     # sort the results into the different categories
     for tag, alo, ahi, blo, bhi in seq_matcher.get_opcodes():
-        if tag == 'replace':
+        if tag == "replace":
             results[tag].extend(zip(model_set[alo:ahi], yt_set[blo:bhi]))
-        elif tag == 'delete':
+        elif tag == "delete":
             results[tag].extend(model_set[alo:ahi])
-        elif tag == 'insert':
+        elif tag == "insert":
             results[tag].extend(yt_set[blo:bhi])
 
     # calculate wer
-    s = len(results['replace'])
-    i = len(results['delete'])
-    d = len(results['insert'])
+    s = len(results["replace"])
+    i = len(results["delete"])
+    d = len(results["insert"])
 
-    results['wer'] = (s+i+d)/len(model_set)
-    results['matchRatio'] = seq_matcher.ratio()
+    results["wer"] = (s + i + d) / len(model_set)
+    results["matchRatio"] = seq_matcher.ratio()
 
     return results

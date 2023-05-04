@@ -16,7 +16,7 @@ class TranscriptTest:
         # normalizer is a function that takes a transcript and returns a normalized transcript
         # see libs/normalizers.py for examples
         self.normalizer: Optional[Callable] = None
-        self.language: str = 'en'
+        self.language: str = "en"
 
     @staticmethod
     def subparser(subparser: argparse.ArgumentParser):

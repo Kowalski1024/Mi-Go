@@ -68,7 +68,7 @@ class TestRunner:
         pass
 
     @classmethod
-    def from_command_line(cls) -> 'TestRunner':
+    def from_command_line(cls) -> "TestRunner":
         """
         Creates a test runner from command line arguments
         """
@@ -77,7 +77,9 @@ class TestRunner:
         logger.info(f"Command line args:\n{pprint.pformat(vars(args))}")
 
         # Get the tester class from the registry
-        tester = [x for x in TestRegistry.get_registry(cls) if x.__name__ == args.test_class][0]
+        tester = [
+            x for x in TestRegistry.get_registry(cls) if x.__name__ == args.test_class
+        ][0]
         logger.info(f"Chosen tester name: {tester.__name__}")
 
         return cls(**vars(args), tester=tester(**vars(args)))
@@ -87,12 +89,14 @@ class TestRunner:
         """
         Creates a parser for the test runner
         """
-        
+
         parser = argparse.ArgumentParser()
         cls.runner_args(parser)
 
         if registry := TestRegistry.get_registry(cls):
-            subparsers = parser.add_subparsers(required=True, help="Select the test you want to run", dest="test_class")
+            subparsers = parser.add_subparsers(
+                required=True, help="Select the test you want to run", dest="test_class"
+            )
 
             # Add the subparsers for each test
             for test in registry:
