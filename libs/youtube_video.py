@@ -1,13 +1,38 @@
-from pathlib import Path
 import dataclasses
 import re
+from pathlib import Path
 
-from youtube_transcript_api import YouTubeTranscriptApi
-from pytube import YouTube
 from loguru import logger
-
+from pytube import YouTube
+from pytube.innertube import _default_clients
+from youtube_transcript_api import YouTubeTranscriptApi
 
 from libs.normalizers import title_normalizer
+
+# FIXME: delete it when pytube will be fixed
+_default_clients['ANDROID'] = {
+    'context': {
+        'client': {
+            'clientName': 'ANDROID',
+            'clientVersion': '17.31.35',
+            'androidSdkVersion': 30,
+            'userAgent': 'com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip'
+        }
+    },
+    'api_key': 'AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w'
+}
+
+_default_clients['ANDROID_EMBED'] = {
+    'context': {
+        'client': {
+            'clientName': 'ANDROID_EMBEDDED_PLAYER',
+            'clientVersion': '17.31.35',
+            'androidSdkVersion': 30,
+            'userAgent': "com.google.android.youtube/17.31.35 (Linux; U; Android 11) gzip"
+        }
+    },
+    'api_key': 'AIzaSyCjc_pVEDi4qsv5MtC2dMXzpIaDoRFLsxw'
+}
 
 
 @dataclasses.dataclass
