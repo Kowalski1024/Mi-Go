@@ -58,7 +58,7 @@ def _insert_video(request_id: int, video: dict) -> int:
     # Keys for video table
     video_keys = ["videoId", "requestId", "defaultAudioLanguage", "duration"]
 
-    transcript_keys = ["id", "lang"]
+    transcript_keys = ["videoId", "lang"]
 
     video["requestId"] = request_id
 
@@ -94,11 +94,11 @@ def insert_transcript_diff_results(testplan: dict) -> None:
     testplan = copy.deepcopy(testplan)
 
     # Keys for results table
-    results_keys = ["id", "wer", "matchRatio", "detectedLanguage"]
+    results_keys = ["videoId", "wer", "matchRatio", "detectedLanguage"]
 
-    replace_keys = ["id", "model", "yt"]
+    replace_keys = ["videoId", "model", "yt"]
 
-    insert_delete_keys = ["id", "word", "operation"]
+    insert_delete_keys = ["videoId", "word", "operation"]
 
     # Insert basic data about testplan
     request_id = _insert_testplan_basic_data(testplan)
@@ -108,7 +108,7 @@ def insert_transcript_diff_results(testplan: dict) -> None:
         cursor = conn.cursor()
 
         cursor.execute(
-            _sql_insert("TranscriptDiffAdditional", ["id", "model"]),
+            _sql_insert("TranscriptDiffAdditional", ["requestId", "model"]),
             (request_id, testplan["model"]["name"]),
         )
 

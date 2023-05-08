@@ -32,46 +32,46 @@ CREATE TABLE IF NOT EXISTS Video (
 );
 
 CREATE TABLE IF NOT EXISTS GeneratedTranscripts (
-    id INTEGER,
+    viedoId INTEGER,
     lang TEXT,
     CONSTRAINT PK_transcript PRIMARY KEY (id, lang),
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (videoId) REFERENCES Video(id)
 );
 
 CREATE TABLE IF NOT EXISTS ManuallyCreatedTranscripts (
-    id INTEGER,
+    videoId INTEGER,
     lang TEXT,
     CONSTRAINT PK_transcript PRIMARY KEY (id, lang),
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (videoId) REFERENCES Video(id)
 );
 
 -- TranscriptDifference
 CREATE TABLE IF NOT EXISTS TranscriptDiffResults (
-    id INTEGER PRIMARY KEY,
+    videoId INTEGER PRIMARY KEY,
     wer FLOAT,
     matchRatio FLOAT,
     detectedLanguage TEXT,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (videoId) REFERENCES Video(id)
 );
 
 CREATE TABLE IF NOT EXISTS TranscriptDiffReplace (
-    id INTEGER,
+    videoId INTEGER,
     model TEXT,
     yt TEXT,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (videoId) REFERENCES Video(id)
 );
 
 CREATE TABLE IF NOT EXISTS TranscriptDiffInsertDelete (
-    id INTEGER,
+    videoId INTEGER,
     word TEXT,
     operation INTEGER,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (videoId) REFERENCES Video(id)
 );
 
 CREATE TABLE IF NOT EXISTS TranscriptDiffAdditional (
-    id INTEGER,
+    requestId INTEGER,
     model TEXT,
-    FOREIGN KEY (id) REFERENCES Request(requestId)
+    FOREIGN KEY (videoId) REFERENCES Request(requestId)
 );
 
 

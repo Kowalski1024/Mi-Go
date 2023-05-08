@@ -1,4 +1,4 @@
 loguru~=0.6.0
-pytube~=12.1.2
+pytube~=15.0.0
 youtube-transcript-api
 google-api-python-client
