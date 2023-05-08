@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 
 from loguru import logger
-from pytube import YouTube
+from pytube import YouTube, exceptions
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from libs.normalizers import title_normalizer
@@ -40,7 +40,7 @@ class YouTubeVideo:
         )
         try:
             audio = YouTube(url).streams.filter(only_audio=True).first()
-        except Exception as e:
+        except (exceptions.AgeRestrictedError, exceptions.VideoUnavailable, exceptions.VideoPrivate) as e:
             raise ValueError(f"Failed to download '{self.title}': {e}")
 
         audio.download(output_path=destination, filename=f"{title}.mp3")
