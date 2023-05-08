@@ -38,7 +38,11 @@ class YouTubeVideo:
         logger.info(
             f"Downloading... (videoId={self.videoId}) '{self.title}' as '{title}.mp3'"
         )
-        audio = YouTube(url).streams.filter(only_audio=True).first()
+        try:
+            audio = YouTube(url).streams.filter(only_audio=True).first()
+        except Exception as e:
+            raise ValueError(f"Failed to download '{self.title}': {e}")
+
         audio.download(output_path=destination, filename=f"{title}.mp3")
 
         return destination.joinpath(f"{title}.mp3")

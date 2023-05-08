@@ -66,7 +66,14 @@ class YouTubeTestRunner(TestRunner):
 
                 # download the audio
                 video = YouTubeVideo.from_dict(video_details)
-                audio = video.download_mp3(self._audio_dir)
+                try:
+                    audio = video.download_mp3(self._audio_dir)
+                except ValueError as e:
+                    logger.warning(
+                        f"Skipping the video {video.videoId}, ValueError (download): {e}"
+                    )
+                    video_details["error"] = f"ValueError (download): {e}"
+                    continue
 
                 # transcribe the audio
                 try:
