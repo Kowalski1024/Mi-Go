@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+import torch
 import whisper
 from whisper.normalizers import EnglishTextNormalizer
 
@@ -14,10 +15,10 @@ class TranscriptDifference(TranscriptTest):
     Test to evaluate the difference between the model transcript and the target transcript
     """
 
-    def __init__(self, model_type: str, **kwargs):
+    def __init__(self, model_type: str, gpu: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.model_type = model_type
-        self.model = whisper.load_model(model_type)
+        self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
 
         self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
@@ -102,4 +103,16 @@ class TranscriptDifference(TranscriptTest):
             dest="model_type",
             choices=model_types,
             required=True,
+        )
+
+        gpus = torch.cuda.device_count()
+
+        subparser.add_argument(
+            "-g",
+            "--gpu",
+            type=int,
+            dest="gpu",
+            choices=range(gpus),
+            default=0,
+            help=f"GPU to use (default: 0, max: {gpus - 1})",
         )
