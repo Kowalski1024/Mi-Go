@@ -64,12 +64,12 @@ export GoogleAPI=<your_google_api_key>
 
 Run the testplan generator, example:
 ```
-python testplan_generator.py 10 -o ./testplans -c 27 -l en
+python generators/testplan_generator.py 10 -o ./testplans -c 27 -l en
 ```
 
 Run the testrunner, example:
 ```
-python youtube_runner.py ./testplans/{testplan.json} -st TranscriptDifference -m large
+python testrunners/youtube_runner.py ./testplans/{testplan.json} -st TranscriptDifference -m large
 ```
 
 
