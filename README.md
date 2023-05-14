@@ -38,21 +38,38 @@ The [Libs folder](https://github.com/Kowalski1024/Mi-Go/blob/master/libs) contai
 The [Databases](https://github.com/Kowalski1024/Mi-Go/blob/master/databases) is a SQLite database that stores the results of the tests, so they can be easily accessed, filtered and analyzed. Designed to support YouTubeTestRunner.
 
 
-<!-- ## Usage
+## Installation
+### Requirements
+- Python 3.10+
+- [Whisper](https://github.com/openai/whisper) (optional)
+- [ffmpeg](https://ffmpeg.org/) (optional)
 
-### Docker
-
-Build image
-
-```shell
-docker build -t model-tester .
+### Install
+1. Clone the repository
+2. Install the requirements
+```
+pip install -r requirements.txt
 ```
 
-Run container
-
-```shell
-docker run  -e GoogleAPI=<YOUR KEY> --gpus all -d --name whisper-tester -it model-tester
+## Usage Linux
+Add source directory to the PYTHONPATH
+```
+export PYTHONPATH=<path_to_source_directory>
 ```
 
-### Example -->
+Add Google API key to the config to environment variables
+```
+export GoogleAPI=<your_google_api_key>
+```
+
+Run the testplan generator, example:
+```
+python testplan_generator.py 10 -o ./testplans -c 27 -l en
+```
+
+Run the testrunner, example:
+```
+python youtube_runner.py ./testplans/{testplan.json} -st TranscriptDifference -m large
+```
+
 
