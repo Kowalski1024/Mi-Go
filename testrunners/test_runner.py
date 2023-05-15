@@ -1,5 +1,6 @@
 import argparse
 import pprint
+import time
 from collections import defaultdict
 
 from loguru import logger
@@ -82,7 +83,9 @@ class TestRunner:
         ][0]
         logger.info(f"Chosen tester name: {tester.__name__}")
 
-        return cls(**vars(args), tester=tester(**vars(args)))
+        obj = cls(**vars(args), tester=tester(**vars(args)))
+        logger.add(f"testrunners/logs/{repr(obj)}_{time.strftime('%Y%m%d-%H%M%S')}.log")
+        return obj
 
     @classmethod
     def parser(cls) -> argparse.ArgumentParser:

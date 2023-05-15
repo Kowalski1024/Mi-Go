@@ -1,7 +1,27 @@
 from difflib import SequenceMatcher
+import jiwer
 
 
-def differ(model_transcript: str, yt_transcript: str) -> dict:
+def jiwer_differ(model_transcript: str, yt_transcript: str) -> dict:
+    """
+    Calculate the speach-to-text metrics using the jiwer library
+
+    Args:
+        model_transcript: transcript from the model
+        yt_transcript: transcript from the target
+
+    Returns:
+        dict with the results of the comparison
+    """
+
+    results = jiwer.compute_measures(model_transcript, yt_transcript)
+    results.pop('ops')
+    results.pop('truth')
+    results.pop("hypothesis")
+    return results
+
+
+def difflib_differ(model_transcript: str, yt_transcript: str) -> dict:
     """
     Basic differ, returns the number of substitutions, insertions, deletions and the wer.
     Uses the SequenceMatcher from difflib

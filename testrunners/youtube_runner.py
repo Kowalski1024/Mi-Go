@@ -27,6 +27,7 @@ class YouTubeTestRunner(TestRunner):
         audio_dir: PathLike,
         iterations: int = 1,
         save_transcripts: bool = False,
+        keep_audio: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -35,6 +36,7 @@ class YouTubeTestRunner(TestRunner):
         self._testplan_path = Path(testplan_path)
         self._iterations = iterations
         self._save_transcripts = save_transcripts
+        self._keep_audio = keep_audio
 
     def run(self) -> None:
         if self.tester.transcriber is None:
@@ -72,7 +74,7 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, ValueError (download): {e}"
                     )
-                    video_details["error"] = f"ValueError (download): {e}"
+                    video_details["results"] = {'error': f"ValueError (download): {e}"}
                     continue
 
                 # transcribe the audio
@@ -82,8 +84,11 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, TimeoutError (model transcript): {e}"
                     )
-                    video_details["error"] = f"TimeoutError (model transcript): {e}"
+                    video_details['results'] = {'error': f"TimeoutError (model transcript): {e}"}
                     continue
+
+                if not self._keep_audio:
+                    audio.unlink()
 
                 # download the target transcript
                 try:
@@ -92,7 +97,7 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}"
                     )
-                    video_details["error"] = f"ValueError (youtube transcript): {e}"
+                    video_details['results'] = {'error': f"ValueError (youtube transcript): {e}"}
                     continue
 
                 # compare the transcripts
@@ -113,6 +118,32 @@ class YouTubeTestRunner(TestRunner):
                 args["pageToken"] = testplan["nextPageToken"]
                 testplan = generate(args)
 
+    def save_results(self, results) -> None:
+        """
+        Save the results to a json file
+
+        Args:
+            results: results to save
+        """
+
+        time_str = time.strftime("%Y%m%d-%H%M%S")
+        filename = f"{self.__class__.__name__}_{results['args']['q']}_{time_str}.json"
+
+        path = Path(__file__).parent.joinpath("output", filename)
+        path.parent.mkdir(exist_ok=True)
+
+        logger.info(f"Saving results - {path}")
+
+        with open(path, "x", encoding="utf-8") as f:
+            json.dump(results, f, ensure_ascii=False)
+
+    def __repr__(self):
+        try:
+            category = f'_{self._testplan_path.name.split("_")[1]}'
+        except IndexError:
+            category = ""
+        return f"{self.__class__.__name__}{category}"
+
     @staticmethod
     def video_details(testplan: dict) -> Iterable[dict]:
         """
@@ -127,26 +158,6 @@ class YouTubeTestRunner(TestRunner):
 
         for video_details in videos:
             yield video_details
-
-    @classmethod
-    def save_results(cls, results) -> None:
-        """
-        Save the results to a json file
-
-        Args:
-            results: results to save
-        """
-
-        time_str = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"{cls.__name__}_{time_str}.json"
-
-        path = Path(__file__).parent.joinpath("output", filename)
-        path.parent.mkdir(exist_ok=True)
-
-        logger.info(f"Saving results - {path}")
-
-        with open(path, "x", encoding="utf-8") as f:
-            json.dump(results, f, ensure_ascii=False, indent=4)
 
     @staticmethod
     def runner_args(parser: argparse.ArgumentParser) -> None:
@@ -175,6 +186,15 @@ class YouTubeTestRunner(TestRunner):
             type=str,
             default="./cache/audio",
             dest="audio_dir",
+        )
+
+        parser.add_argument(
+            "-k",
+            "--keep-audio",
+            required=False,
+            action="store_true",
+            dest="keep_audio",
+            default=False,
         )
 
         parser.add_argument("-it", "--iterations", required=False, type=int, default=1)

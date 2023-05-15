@@ -1,4 +1,6 @@
 loguru~=0.6.0
 pytube~=15.0.0
+yt-dlp
 youtube-transcript-api
 google-api-python-client
+jiwer=3.0.1

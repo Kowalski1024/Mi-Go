@@ -3,7 +3,6 @@ import re
 from pathlib import Path
 
 from loguru import logger
-from pytube import YouTube, exceptions
 from youtube_transcript_api import YouTubeTranscriptApi
 
 from libs.normalizers import title_normalizer
@@ -21,12 +20,13 @@ class YouTubeVideo:
     generatedTranscripts: list
     manuallyCreatedTranscripts: list
 
-    def download_mp3(self, destination: Path) -> Path:
+    def download_mp3(self, destination: Path, downloader: str = 'pytube') -> Path:
         """
         Download video as mp3
 
         Args:
             destination: destination directory
+            downloader: downloader to use, either 'youtube_dl' or 'pytube'
 
         Returns:
             Path to downloaded file
@@ -38,12 +38,36 @@ class YouTubeVideo:
         logger.info(
             f"Downloading... (videoId={self.videoId}) '{self.title}' as '{title}.mp3'"
         )
-        try:
-            audio = YouTube(url).streams.filter(only_audio=True).first()
-        except (exceptions.AgeRestrictedError, exceptions.VideoUnavailable, exceptions.VideoPrivate) as e:
-            raise ValueError(f"Failed to download '{self.title}': {e}")
 
-        audio.download(output_path=destination, filename=f"{title}.mp3")
+        if destination.joinpath(f"{title}.mp3").exists():
+            logger.info(f"File '{title}.mp3' already exists, skipping download")
+            return destination.joinpath(f"{title}.mp3")
+
+        if downloader == 'youtube_dl':
+            import yt_dlp as youtube_dl
+
+            ydl_opts = {
+                "format": "bestaudio/best",
+                "postprocessors": [
+                    {
+                        "key": "FFmpegExtractAudio",
+                        "preferredcodec": "mp3",
+                        "preferredquality": "192",
+                    }
+                ],
+                'outtmpl': f'{destination}/{title}'
+            }
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+        else:
+            from pytube import YouTube, exceptions
+
+            try:
+                audio = YouTube(url).streams.filter(only_audio=True).first()
+            except (exceptions.AgeRestrictedError, exceptions.VideoUnavailable, exceptions.VideoPrivate) as e:
+                raise ValueError(f"Failed to download '{self.title}': {e}")
+
+            audio.download(output_path=destination, filename=f"{title}.mp3")
 
         return destination.joinpath(f"{title}.mp3")
 

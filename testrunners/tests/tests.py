@@ -2,11 +2,12 @@ import argparse
 from pathlib import Path
 
 import torch
+import numpy as np
 import whisper
 from whisper.normalizers import EnglishTextNormalizer
 
 from testrunners.tests import TranscriptTest
-from libs.differs import differ
+from libs.differs import jiwer_differ
 import databases
 
 
@@ -15,31 +16,29 @@ class TranscriptDifference(TranscriptTest):
     Test to evaluate the difference between the model transcript and the target transcript
     """
 
-    def __init__(self, model_type: str, gpu: int = 0, **kwargs):
+    def __init__(self, model_type: str, model_language: str = None, gpu: int = 0, **kwargs):
         super().__init__(**kwargs)
         self.model_type = model_type
+        self.model_language = model_language
         self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
 
         self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
+        self.differ = jiwer_differ
 
-    def transcribe(self, audio_path: Path, remove_audio=True) -> str:
+    def transcribe(self, audio_path: Path) -> str:
         """
         Transcribe the audio file by model and return the transcript
 
         Args:
             audio_path: path to audio file
-            remove_audio: whether to remove the audio file after transcribing
 
         Returns:
             Transcript
         """
 
-        results = self.transcriber(audio=str(audio_path), verbose=False)
+        results = self.transcriber(audio=str(audio_path), verbose=False, language=self.model_language)
         self.language = results["language"]
-
-        if remove_audio:
-            audio_path.unlink()
 
         return results["text"]
 
@@ -58,7 +57,7 @@ class TranscriptDifference(TranscriptTest):
         normalized_model = self.normalizer(model_transcript)
         normalized_target = self.normalizer(target_transcript)
 
-        differ_results = differ(normalized_model, normalized_target)
+        differ_results = jiwer_differ(normalized_model, normalized_target)
         differ_results["detectedLanguage"] = self.language
 
         return differ_results
@@ -70,10 +69,19 @@ class TranscriptDifference(TranscriptTest):
         Args:
             testplan: testplan to postprocess
         """
+        # calculate var and mean
+        wer = np.array([video["results"]["wer"] for video in testplan["items"] if "error" not in video["results"]])
+        mean = np.mean(wer)
+        std = np.std(wer)
 
-        testplan["model"] = {"name": self.model_type}
+        testplan["model"] = {
+            "name": self.model_type,
+            "language": self.model_language,
+            "werMean": mean,
+            "werStd": std,
+        }
 
-        databases.insert_transcript_diff_results(testplan)
+        databases.insert_transcript_diff_results(testplan, self.differ)
 
     @staticmethod
     def subparser(subparser: argparse.ArgumentParser):
@@ -115,4 +123,14 @@ class TranscriptDifference(TranscriptTest):
             choices=range(gpus),
             default=0,
             help=f"GPU to use (default: 0, max: {gpus - 1})",
+        )
+
+        subparser.add_argument(
+            "-ml",
+            "--model-language",
+            type=str,
+            dest="model_language",
+            default=None,
+            required=False,
+            help=f"Model language (default: None)"
         )

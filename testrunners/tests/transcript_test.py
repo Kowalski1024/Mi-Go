@@ -37,13 +37,12 @@ class TranscriptTest:
         """
         pass
 
-    def transcribe(self, audio_path: Path, remove_audio=True) -> str:
+    def transcribe(self, audio_path: Path) -> str:
         """
         Override this method, should transcribe the audio file and return the transcript
 
         Args:
             audio_path: path to audio file
-            remove_audio: whether to remove the audio file after transcribing
 
         Returns:
             Transcript

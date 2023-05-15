@@ -46,7 +46,17 @@ CREATE TABLE IF NOT EXISTS ManuallyCreatedTranscripts (
 );
 
 -- TranscriptDifference
-CREATE TABLE IF NOT EXISTS TranscriptDiffResults (
+CREATE TABLE IF NOT EXISTS TranscriptDiffAdditional (
+    requestId INTEGER,
+    model TEXT,
+    language TEXT DEFAULT NULL,
+    werMean FLOAT,
+    werStd FLOAT,
+    FOREIGN KEY (requestId) REFERENCES Request(requestId)
+);
+
+-- DiffLib
+CREATE TABLE IF NOT EXISTS DiffLibResults (
     id INTEGER PRIMARY KEY,
     wer FLOAT,
     matchRatio FLOAT,
@@ -54,24 +64,33 @@ CREATE TABLE IF NOT EXISTS TranscriptDiffResults (
     FOREIGN KEY (id) REFERENCES Video(id)
 );
 
-CREATE TABLE IF NOT EXISTS TranscriptDiffReplace (
+CREATE TABLE IF NOT EXISTS DiffLibReplace (
     id INTEGER,
     model TEXT,
     yt TEXT,
     FOREIGN KEY (id) REFERENCES Video(id)
 );
 
-CREATE TABLE IF NOT EXISTS TranscriptDiffInsertDelete (
+CREATE TABLE IF NOT EXISTS DiffLibInsertDelete (
     id INTEGER,
     word TEXT,
     operation INTEGER,
     FOREIGN KEY (id) REFERENCES Video(id)
 );
 
-CREATE TABLE IF NOT EXISTS TranscriptDiffAdditional (
-    requestId INTEGER,
-    model TEXT,
-    FOREIGN KEY (requestId) REFERENCES Request(requestId)
+-- JiWER
+CREATE TABLE IF NOT EXISTS JiWERResults (
+    id INTEGER PRIMARY KEY,
+    wer FLOAT,
+    mer FLOAT,
+    wil FLOAT,
+    wip FLOAT,
+    hits INTEGER,
+    substitutions INTEGER,
+    deletions INTEGER,
+    insertions INTEGER,
+    detectedLanguage TEXT,
+    FOREIGN KEY (id) REFERENCES Video(id)
 );
 
 
