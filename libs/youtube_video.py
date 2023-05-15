@@ -20,7 +20,7 @@ class YouTubeVideo:
     generatedTranscripts: list
     manuallyCreatedTranscripts: list
 
-    def download_mp3(self, destination: Path, downloader: str = 'pytube') -> Path:
+    def download_mp3(self, destination: Path, downloader: str = 'youtube_dl') -> Path:
         """
         Download video as mp3
 
