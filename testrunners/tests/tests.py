@@ -71,8 +71,11 @@ class TranscriptDifference(TranscriptTest):
         """
         # calculate var and mean
         wer = np.array([video["results"]["wer"] for video in testplan["items"] if "error" not in video["results"]])
-        mean = np.mean(wer)
-        std = np.std(wer)
+        if len(wer) == 0:
+            mean, std = None, None
+        else:
+            mean = np.mean(wer)
+            std = np.std(wer)
 
         testplan["model"] = {
             "name": self.model_type,
@@ -81,6 +84,7 @@ class TranscriptDifference(TranscriptTest):
             "werStd": std,
         }
 
+    def insert_to_database(self, testplan):
         databases.insert_transcript_diff_results(testplan, self.differ)
 
     @staticmethod

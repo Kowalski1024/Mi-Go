@@ -65,9 +65,19 @@ class YouTubeTestRunner(TestRunner):
                 logger.info(
                     f"Testplan status: {idx + 1}/{len(testplan['items'])} video, {i + 1}/{self._iterations} testplan"
                 )
+                video = YouTubeVideo.from_dict(video_details)
+
+                # download the target transcript
+                try:
+                    target_transcript = video.youtube_transcript(self.tester.language)
+                except ValueError as e:
+                    logger.warning(
+                        f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}"
+                    )
+                    video_details['results'] = {'error': f"ValueError (youtube transcript): {e}"}
+                    continue
 
                 # download the audio
-                video = YouTubeVideo.from_dict(video_details)
                 try:
                     audio = video.download_mp3(self._audio_dir)
                 except ValueError as e:
@@ -90,19 +100,16 @@ class YouTubeTestRunner(TestRunner):
                 if not self._keep_audio:
                     audio.unlink()
 
-                # download the target transcript
+                # compare the transcripts
                 try:
-                    target_transcript = video.youtube_transcript(self.tester.language)
+                    results = self.tester.compare(model_transcript, target_transcript)
+                    video_details["results"] = results
                 except ValueError as e:
                     logger.warning(
-                        f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}"
+                        f"Skipping the video {video.videoId}, ValueError (compare): {e}"
                     )
-                    video_details['results'] = {'error': f"ValueError (youtube transcript): {e}"}
+                    video_details['results'] = {'error': f"ValueError (compare): {e}"}
                     continue
-
-                # compare the transcripts
-                results = self.tester.compare(model_transcript, target_transcript)
-                video_details["results"] = results
 
                 # add the transcripts to the video details if we want to save them
                 if self._save_transcripts:
@@ -111,6 +118,7 @@ class YouTubeTestRunner(TestRunner):
 
             self.tester.testplan_postprocess(testplan)
             self.save_results(testplan)
+            self.tester.insert_to_database(testplan)
 
             # generate a new testplan if we need to
             if i + 1 < self._iterations:
@@ -127,7 +135,7 @@ class YouTubeTestRunner(TestRunner):
         """
 
         time_str = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"{self.__class__.__name__}_{results['args']['q']}_{time_str}.json"
+        filename = f"{results['args']['q']}_{self.__class__.__name__}_{time_str}.json"
 
         path = Path(__file__).parent.joinpath("output", filename)
         path.parent.mkdir(exist_ok=True)
@@ -139,7 +147,7 @@ class YouTubeTestRunner(TestRunner):
 
     def __repr__(self):
         try:
-            category = f'_{self._testplan_path.name.split("_")[1]}'
+            category = f'_{self._testplan_path.name.split("_")[0]}'
         except IndexError:
             category = ""
         return f"{self.__class__.__name__}{category}"

@@ -167,8 +167,8 @@ def insert_transcript_diff_results(testplan: dict, differ: Callable) -> None:
 
     for video in testplan["items"]:
         # Skip videos with errors
-        if "error" in video["results"]:
-            logger.info(f"Skipping video {video['videoId']}: {video['error']}")
+        if e := video["results"].get("error", None):
+            logger.warning(f"Skipping inserting results for video {video['videoId']}: {e}")
             continue
 
         # Insert video data

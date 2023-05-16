@@ -37,6 +37,15 @@ class TranscriptTest:
         """
         pass
 
+    def insert_to_database(self, testplan: dict):
+        """
+        Use this method to insert the testplan to the database
+
+        Args:
+            testplan: testplan to insert
+        """
+        pass
+
     def transcribe(self, audio_path: Path) -> str:
         """
         Override this method, should transcribe the audio file and return the transcript

@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS Args (
     relevanceLanguage TEXT NULL,
     topicId TEXT NULL,
     videoDuration TEXT NULL,
-    FOREIGN KEY (requestId) REFERENCES Request(requestId)
+    FOREIGN KEY (requestId) REFERENCES Request(requestId) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Video (
@@ -27,22 +27,22 @@ CREATE TABLE IF NOT EXISTS Video (
     videoId TEXT,
     defaultAudioLanguage TEXT NULL,
     duration TEXT,
-    FOREIGN KEY (requestId) REFERENCES request(requestId),
-    CONSTRAINT UC_video UNIQUE (videoId, requestId)
+    CONSTRAINT UC_video UNIQUE (videoId, requestId),
+    FOREIGN KEY (requestId) REFERENCES request(requestId) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS GeneratedTranscripts (
     id INTEGER,
     lang TEXT,
     CONSTRAINT PK_transcript PRIMARY KEY (id, lang),
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (id) REFERENCES Video(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS ManuallyCreatedTranscripts (
     id INTEGER,
     lang TEXT,
     CONSTRAINT PK_transcript PRIMARY KEY (id, lang),
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (id) REFERENCES Video(id) ON DELETE CASCADE
 );
 
 -- TranscriptDifference
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS TranscriptDiffAdditional (
     language TEXT DEFAULT NULL,
     werMean FLOAT,
     werStd FLOAT,
-    FOREIGN KEY (requestId) REFERENCES Request(requestId)
+    FOREIGN KEY (requestId) REFERENCES Request(requestId) ON DELETE CASCADE
 );
 
 -- DiffLib
@@ -61,21 +61,21 @@ CREATE TABLE IF NOT EXISTS DiffLibResults (
     wer FLOAT,
     matchRatio FLOAT,
     detectedLanguage TEXT,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (id) REFERENCES Video(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS DiffLibReplace (
     id INTEGER,
     model TEXT,
     yt TEXT,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (id) REFERENCES Video(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS DiffLibInsertDelete (
     id INTEGER,
     word TEXT,
     operation INTEGER,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (id) REFERENCES Video(id) ON DELETE CASCADE
 );
 
 -- JiWER
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS JiWERResults (
     deletions INTEGER,
     insertions INTEGER,
     detectedLanguage TEXT,
-    FOREIGN KEY (id) REFERENCES Video(id)
+    FOREIGN KEY (id) REFERENCES Video(id) ON DELETE CASCADE
 );
 
 
