@@ -52,7 +52,7 @@ class YouTubeTestRunner(TestRunner):
                 "Add GoogleAPI or set iterations to 1."
             )
 
-        with open(self._testplan_path) as f:
+        with open(self._testplan_path, encoding="utf8") as f:
             testplan = json.load(f)
 
         # run the testplan
