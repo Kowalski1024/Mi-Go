@@ -1,5 +1,5 @@
-import unicodedata
 import re
+import unicodedata
 
 
 def title_normalizer(string, allow_unicode=False) -> str:

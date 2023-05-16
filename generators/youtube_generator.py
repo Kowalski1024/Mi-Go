@@ -1,14 +1,14 @@
-from pathlib import Path
-from functools import lru_cache
-import pprint
 import argparse
-import time
 import json
 import os
+import pprint
+import time
+from functools import lru_cache
+from pathlib import Path
 
-from youtube_transcript_api import YouTubeTranscriptApi
-from loguru import logger
 import googleapiclient.discovery
+from loguru import logger
+from youtube_transcript_api import YouTubeTranscriptApi
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 api_key = os.environ.get("GoogleAPI")

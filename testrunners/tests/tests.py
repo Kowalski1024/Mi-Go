@@ -1,14 +1,14 @@
 import argparse
 from pathlib import Path
 
-import torch
 import numpy as np
+import torch
 import whisper
 from whisper.normalizers import EnglishTextNormalizer
 
-from testrunners.tests import TranscriptTest
-from libs.differs import jiwer_differ
 import databases
+from libs.differs import jiwer_differ
+from testrunners.tests import TranscriptTest
 
 
 class TranscriptDifference(TranscriptTest):
@@ -16,7 +16,9 @@ class TranscriptDifference(TranscriptTest):
     Test to evaluate the difference between the model transcript and the target transcript
     """
 
-    def __init__(self, model_type: str, model_language: str = None, gpu: int = 0, **kwargs):
+    def __init__(
+        self, model_type: str, model_language: str = None, gpu: int = 0, **kwargs
+    ):
         super().__init__(**kwargs)
         self.model_type = model_type
         self.model_language = model_language
@@ -37,7 +39,9 @@ class TranscriptDifference(TranscriptTest):
             Transcript
         """
 
-        results = self.transcriber(audio=str(audio_path), verbose=False, language=self.model_language)
+        results = self.transcriber(
+            audio=str(audio_path), verbose=False, language=self.model_language
+        )
         self.language = results["language"]
 
         return results["text"]
@@ -70,7 +74,13 @@ class TranscriptDifference(TranscriptTest):
             testplan: testplan to postprocess
         """
         # calculate var and mean
-        wer = np.array([video["results"]["wer"] for video in testplan["items"] if "error" not in video["results"]])
+        wer = np.array(
+            [
+                video["results"]["wer"]
+                for video in testplan["items"]
+                if "error" not in video["results"]
+            ]
+        )
         if len(wer) == 0:
             mean, std = None, None
         else:
@@ -136,5 +146,5 @@ class TranscriptDifference(TranscriptTest):
             dest="model_language",
             default=None,
             required=False,
-            help=f"Model language (default: None)"
+            help=f"Model language (default: None)",
         )

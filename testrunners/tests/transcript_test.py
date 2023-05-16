@@ -1,6 +1,6 @@
-from typing import Optional, Callable
 import argparse
 from pathlib import Path
+from typing import Callable, Optional
 
 
 class TranscriptTest:

@@ -1,4 +1,5 @@
 from difflib import SequenceMatcher
+
 import jiwer
 
 
@@ -15,8 +16,8 @@ def jiwer_differ(model_transcript: str, yt_transcript: str) -> dict:
     """
 
     results = jiwer.compute_measures(model_transcript, yt_transcript)
-    results.pop('ops')
-    results.pop('truth')
+    results.pop("ops")
+    results.pop("truth")
     results.pop("hypothesis")
     return results
 

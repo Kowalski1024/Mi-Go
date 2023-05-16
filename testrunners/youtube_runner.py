@@ -1,18 +1,18 @@
-from typing import Iterable
 import argparse
-from pathlib import Path
-from os import PathLike
-import pprint
 import json
 import os
+import pprint
 import time
+from os import PathLike
+from pathlib import Path
+from typing import Iterable
 
 from loguru import logger
 
-from libs.youtube_video import YouTubeVideo
-from testrunners import TestRunner, TestRegistry
-from testrunners.tests.tests import TranscriptDifference
 from generators.youtube_generator import generate
+from libs.youtube_video import YouTubeVideo
+from testrunners import TestRegistry, TestRunner
+from testrunners.tests.tests import TranscriptDifference
 
 
 @TestRegistry.register(TranscriptDifference)
@@ -74,7 +74,9 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}"
                     )
-                    video_details['results'] = {'error': f"ValueError (youtube transcript): {e}"}
+                    video_details["results"] = {
+                        "error": f"ValueError (youtube transcript): {e}"
+                    }
                     continue
 
                 # download the audio
@@ -84,7 +86,7 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, ValueError (download): {e}"
                     )
-                    video_details["results"] = {'error': f"ValueError (download): {e}"}
+                    video_details["results"] = {"error": f"ValueError (download): {e}"}
                     continue
 
                 # transcribe the audio
@@ -94,7 +96,9 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, TimeoutError (model transcript): {e}"
                     )
-                    video_details['results'] = {'error': f"TimeoutError (model transcript): {e}"}
+                    video_details["results"] = {
+                        "error": f"TimeoutError (model transcript): {e}"
+                    }
                     continue
 
                 if not self._keep_audio:
@@ -108,7 +112,7 @@ class YouTubeTestRunner(TestRunner):
                     logger.warning(
                         f"Skipping the video {video.videoId}, ValueError (compare): {e}"
                     )
-                    video_details['results'] = {'error': f"ValueError (compare): {e}"}
+                    video_details["results"] = {"error": f"ValueError (compare): {e}"}
                     continue
 
                 # add the transcripts to the video details if we want to save them
@@ -125,6 +129,8 @@ class YouTubeTestRunner(TestRunner):
                 args = testplan["args"]
                 args["pageToken"] = testplan["nextPageToken"]
                 testplan = generate(args)
+
+        logger.info("Testplan finished")
 
     def save_results(self, results) -> None:
         """

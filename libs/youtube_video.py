@@ -20,7 +20,7 @@ class YouTubeVideo:
     generatedTranscripts: list
     manuallyCreatedTranscripts: list
 
-    def download_mp3(self, destination: Path, downloader: str = 'youtube_dl') -> Path:
+    def download_mp3(self, destination: Path, downloader: str = "youtube_dl") -> Path:
         """
         Download video as mp3
 
@@ -43,7 +43,7 @@ class YouTubeVideo:
             logger.info(f"File '{title}.mp3' already exists, skipping download")
             return destination.joinpath(f"{title}.mp3")
 
-        if downloader == 'youtube_dl':
+        if downloader == "youtube_dl":
             import yt_dlp as youtube_dl
 
             ydl_opts = {
@@ -55,7 +55,7 @@ class YouTubeVideo:
                         "preferredquality": "192",
                     }
                 ],
-                'outtmpl': f'{destination}/{title}'
+                "outtmpl": f"{destination}/{title}",
             }
             with youtube_dl.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
@@ -64,7 +64,11 @@ class YouTubeVideo:
 
             try:
                 audio = YouTube(url).streams.filter(only_audio=True).first()
-            except (exceptions.AgeRestrictedError, exceptions.VideoUnavailable, exceptions.VideoPrivate) as e:
+            except (
+                exceptions.AgeRestrictedError,
+                exceptions.VideoUnavailable,
+                exceptions.VideoPrivate,
+            ) as e:
                 raise ValueError(f"Failed to download '{self.title}': {e}")
 
             audio.download(output_path=destination, filename=f"{title}.mp3")

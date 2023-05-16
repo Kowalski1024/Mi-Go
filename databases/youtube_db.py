@@ -1,11 +1,10 @@
-from typing import Callable
 import copy
 import sqlite3
+from typing import Callable
 
 from loguru import logger
 
 from libs.differs import difflib_differ, jiwer_differ
-
 
 conn = sqlite3.connect("databases.sqlite")
 
@@ -115,9 +114,7 @@ def _difflib_results(results: dict, video_id: int) -> None:
         cursor.execute(_sql_insert("DiffLibResults", results_keys), values)
 
         values = [(video_id, model, yt) for model, yt in replace]
-        cursor.executemany(
-            _sql_insert("DiffLibReplace", replace_keys), values
-        )
+        cursor.executemany(_sql_insert("DiffLibReplace", replace_keys), values)
 
         values = [(video_id, word, 1) for word in insert] + [
             (video_id, word, -1) for word in delete
@@ -130,7 +127,18 @@ def _difflib_results(results: dict, video_id: int) -> None:
 def _jiwer_results(results: dict, video_id: int) -> None:
     logger.info(f"Inserting results using jiwer")
     # Keys for results table
-    results_keys = ["id", "wer", "mer", "wil", "wip", "hits", "substitutions", "deletions", "insertions", "detectedLanguage"]
+    results_keys = [
+        "id",
+        "wer",
+        "mer",
+        "wil",
+        "wip",
+        "hits",
+        "substitutions",
+        "deletions",
+        "insertions",
+        "detectedLanguage",
+    ]
 
     with conn:
         cursor = conn.cursor()
@@ -161,14 +169,25 @@ def insert_transcript_diff_results(testplan: dict, differ: Callable) -> None:
         model = testplan["model"]
 
         cursor.execute(
-            _sql_insert("TranscriptDiffAdditional", ["requestId", "model", "language", "werMean", "werStd"]),
-            (request_id, model["name"], model.get("language", None), model["werMean"], model["werStd"]),
+            _sql_insert(
+                "TranscriptDiffAdditional",
+                ["requestId", "model", "language", "werMean", "werStd"],
+            ),
+            (
+                request_id,
+                model["name"],
+                model.get("language", None),
+                model["werMean"],
+                model["werStd"],
+            ),
         )
 
     for video in testplan["items"]:
         # Skip videos with errors
         if e := video["results"].get("error", None):
-            logger.warning(f"Skipping inserting results for video {video['videoId']}: {e}")
+            logger.warning(
+                f"Skipping inserting results for video {video['videoId']}: {e}"
+            )
             continue
 
         # Insert video data
