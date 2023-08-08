@@ -14,6 +14,10 @@ speech-to-text models.
 Currently, the framework mainly focuses on YouTube datasets, but we believe it can be easily extended to other datasets
 as well.
 
+### General idea of the framework
+
+![Mi-Go schema](https://github.com/Kowalski1024/Mi-Go/blob/master/schema.png)
+
 ## Motivation
 
 The primary goal of Mi-Go is to offer a user-friendly script for speech-to-text model validation on YouTube videos.
@@ -24,7 +28,7 @@ adaptability and performance of speech recognition models in real-world scenario
 Additionally, Mi-Go is motivated by the desire to test the latest state-of-the-art model for speech
 recognition, [Whisper](https://github.com/openai/whisper), which is open-source and freely available on GitHub.
 
-![YouTube schema](https://github.com/Kowalski1024/Mi-Go/blob/master/schema.png)
+![Framework pipeline](https://github.com/Kowalski1024/Mi-Go/blob/master/pipeline.png)
 
 # Framework structure
 
