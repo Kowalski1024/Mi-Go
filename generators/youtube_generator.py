@@ -88,7 +88,6 @@ def search_request(
     part: str = "snippet",
     video_type: str = "video",
     caption: str = "closedCaption",
-    video_license: str = "creativeCommon"
 ) -> dict:
     """
     Request search from youtube api
@@ -98,7 +97,6 @@ def search_request(
         part: search response properties
         video_type: accepted types - any, episode, movie
         caption: accepted captions - any, closedCaption, none
-        video_license: accepted licenses - any, creativeCommon, youtube
 
     Returns:
         response from youtube api
@@ -112,7 +110,6 @@ def search_request(
         part=part,
         type=video_type,
         videoCaption=caption,
-        videoLicense=video_license
     )
     response = request.execute()
     response["videoCategoryId"] = args["videoCategoryId"]
@@ -230,7 +227,7 @@ def save_as_json(results: dict, destination: os.PathLike, category: str) -> None
         json.dump(results, f, ensure_ascii=False, indent=4, sort_keys=True)
 
 
-def command_parser() -> argparse.ArgumentParser:
+def command_parser() -> tuple[argparse.Namespace, list[str]]:
     """
     Parse command line arguments
 
@@ -285,6 +282,14 @@ def command_parser() -> argparse.ArgumentParser:
         type=str,
         default="medium",
         choices=["any", "long", "medium", " short"],
+    )
+    parser.add_argument(
+        "-lc",
+        "--videoLicense",
+        required=False,
+        type=str,
+        default="creativeCommon",
+        choices=["any", "creativeCommon", "youtube"],
     )
     parser.add_argument("-q", "--queryTerm", required=False, type=str, dest="q")
     parser.add_argument(
