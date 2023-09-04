@@ -88,6 +88,7 @@ def search_request(
     part: str = "snippet",
     video_type: str = "video",
     caption: str = "closedCaption",
+    video_license: str = "creativeCommon"
 ) -> dict:
     """
     Request search from youtube api
@@ -97,6 +98,7 @@ def search_request(
         part: search response properties
         video_type: accepted types - any, episode, movie
         caption: accepted captions - any, closedCaption, none
+        video_license: accepted licenses - any, creativeCommon, youtube
 
     Returns:
         response from youtube api
@@ -110,6 +112,7 @@ def search_request(
         part=part,
         type=video_type,
         videoCaption=caption,
+        videoLicense=video_license
     )
     response = request.execute()
     response["videoCategoryId"] = args["videoCategoryId"]
