@@ -9,14 +9,7 @@ from whisper.normalizers import EnglishTextNormalizer
 import databases
 from libs.differs import jiwer_differ
 from testrunners.tests import TranscriptTest
-
-class TestModel:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def transcribe(audio, verbose=False, language="en"):
-        return {"text": "This is a model for tests :)", "language": "en"}
+from apptests import TestModel
 
 class DummyTest(TranscriptTest):
     def __init__(self, **kwargs):
