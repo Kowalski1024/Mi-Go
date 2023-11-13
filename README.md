@@ -112,7 +112,7 @@ python generators/testplan_generator.py 10 -o ./testplans -c 27 -l en
 Run the testrunner, example:
 
 ```
-python testrunners/youtube_runner.py ./testplans/{testplan.json} -st TranscriptDifference -m large
+python testrunners/youtube_runner.py ./testplans/{testplan.json} -st DummyTest
 ```
 
 
