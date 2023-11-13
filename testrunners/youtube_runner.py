@@ -12,7 +12,7 @@ from loguru import logger
 from generators.youtube_generator import generate
 from libs.youtube_video import YouTubeVideo
 from testrunners import TestRegistry, TestRunner
-from testrunners.tests.tests import WhisperTest, DummyTest
+from testrunners.tests.tests import DummyTest, WhisperTest
 
 
 @TestRegistry.register(WhisperTest, DummyTest)
