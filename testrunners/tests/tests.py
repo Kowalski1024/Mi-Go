@@ -10,6 +10,7 @@ import databases
 from libs.differs import jiwer_differ
 from testrunners.tests import TranscriptTest
 
+
 class DummyTest(TranscriptTest):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -49,7 +50,12 @@ class WhisperTest(TranscriptTest):
     """
 
     def __init__(
-        self, use_test_model: bool, model_type: str, model_language: str = None, gpu: int = 0, **kwargs
+        self,
+        use_test_model: bool,
+        model_type: str,
+        model_language: str = None,
+        gpu: int = 0,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.model_type = model_type
@@ -58,7 +64,9 @@ class WhisperTest(TranscriptTest):
         if use_test_model:
             self.model = TestModel()
         else:
-            self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
+            self.model = whisper.load_model(
+                model_type, device=torch.device(f"cuda:{gpu}")
+            )
 
         self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
@@ -184,7 +192,7 @@ class WhisperTest(TranscriptTest):
             required=False,
             help=f"Model language (default: None)",
         )
-        
+
         subparser.add_argument(
             "-tm",
             "--use-test-model",
