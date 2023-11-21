@@ -147,9 +147,9 @@ class Test_search_request(unittest.TestCase):
 
 
 # class Test_results_parser(unittest.TestCase):
-    # def test_valid_params(self):
-    #     response = gen.results_parser()
-    #     self.assertIsNotNone(response.get(1))
+# def test_valid_params(self):
+#     response = gen.results_parser()
+#     self.assertIsNotNone(response.get(1))
 
 
 if __name__ == "__main__":
