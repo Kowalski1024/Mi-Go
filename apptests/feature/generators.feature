@@ -43,12 +43,11 @@ Feature: Generators functionality
     Then we extend video info by duration 
     And we extend video info by audio language
 
-  Scenario: Make transcript for every video in data
+  Scenario: Returns information about available transcriptions
     Given list of videos
     When we collect ids of videos
-    And transcibe each video
-    Then we add to video info manual transcript
-    And we add to vide info auto generated transcript
+    And call add_transcripts_info func
+    Then we get a list of languages for available transciptions
 
   Scenario: Save videos info as json file
     Given videos infos list
