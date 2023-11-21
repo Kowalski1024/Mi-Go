@@ -51,7 +51,6 @@ class WhisperTest(TranscriptTest):
 
     def __init__(
         self,
-        use_test_model: bool,
         model_type: str,
         model_language: str = None,
         gpu: int = 0,
@@ -61,12 +60,7 @@ class WhisperTest(TranscriptTest):
         self.model_type = model_type
         self.model_language = model_language
 
-        if use_test_model:
-            self.model = TestModel()
-        else:
-            self.model = whisper.load_model(
-                model_type, device=torch.device(f"cuda:{gpu}")
-            )
+        self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
 
         self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
@@ -191,14 +185,4 @@ class WhisperTest(TranscriptTest):
             default=None,
             required=False,
             help=f"Model language (default: None)",
-        )
-
-        subparser.add_argument(
-            "-tm",
-            "--use-test-model",
-            type=bool,
-            dest="use_test_model",
-            default=False,
-            required=False,
-            help=f"Use test model (default: False)",
         )
