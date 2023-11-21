@@ -11,7 +11,6 @@ from libs.differs import jiwer_differ
 from testrunners.tests import TranscriptTest
 
 
-
 class DummyTest(TranscriptTest):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -62,6 +61,7 @@ class WhisperTest(TranscriptTest):
         self.model_language = model_language
 
         self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
+
         self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
         self.differ = jiwer_differ

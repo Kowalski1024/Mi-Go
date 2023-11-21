@@ -79,7 +79,6 @@ class Test_assignable_categories(unittest.TestCase):
 
 
 class Test_search_request(unittest.TestCase):
-
     # def test_empty_dict_params(self):
     #     response = gen.search_request(args={})
     #     self.assertNotNil(response.get("error"))
@@ -91,6 +90,7 @@ class Test_search_request(unittest.TestCase):
     def test_valid_params(self):
         response = gen.search_request(args=search_request.get("args"))
         self.assertIsNotNone(response)
+
 
 class Test_results_parser(unittest.TestCase):
     def test_valid_params(self):
