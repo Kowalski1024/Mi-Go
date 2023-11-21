@@ -15,9 +15,7 @@ Feature: General purpose of project and parts of it
     Then results store in database and JSON file
   
   Scenario: TranscriptTest runs model and compares its output to the yt transcript
-    Given model type 
-    And model language
-    And additional info about gpu/cpu
+    Given Given arguments for a particular TranscriptTest
     When we turn on model 
     And get yt transciption
     And make difference
