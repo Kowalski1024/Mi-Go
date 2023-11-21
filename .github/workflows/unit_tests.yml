@@ -20,3 +20,7 @@ jobs:
         run: coverage run -m unittest discover apptests
       - name: Show coverage report
         run: coverage report -m
+
+    env:
+      GOOGLE_API_KEY: ${{ secrets.GoogleAPI }}
+      
