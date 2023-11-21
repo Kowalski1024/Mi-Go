@@ -9,7 +9,6 @@ from whisper.normalizers import EnglishTextNormalizer
 import databases
 from libs.differs import jiwer_differ
 from testrunners.tests import TranscriptTest
-from apptests import TestModel
 
 class DummyTest(TranscriptTest):
     def __init__(self, **kwargs):
