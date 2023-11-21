@@ -50,11 +50,16 @@ class WhisperTest(TranscriptTest):
     """
 
     def __init__(
-        self, model_type: str, model_language: str = None, gpu: int = 0, **kwargs
+        self,
+        model_type: str,
+        model_language: str = None,
+        gpu: int = 0,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.model_type = model_type
         self.model_language = model_language
+
         self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
 
         self.normalizer = EnglishTextNormalizer()
