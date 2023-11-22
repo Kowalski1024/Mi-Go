@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-20.04
+    env:
+      GoogleAPI: ${{ secrets.GOOGLEAPI }}
+      
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.10
@@ -20,7 +23,3 @@ jobs:
         run: coverage run -m unittest discover apptests
       - name: Show coverage report
         run: coverage report -m
-
-    env:
-      GoogleAPI: ${{ secrets.GOOGLEAPI }}
-      
