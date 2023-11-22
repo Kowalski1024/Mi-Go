@@ -22,5 +22,5 @@ jobs:
         run: coverage report -m
 
     env:
-      GoogleAPI: ${{ secrets.GOOGLEAPI }}
+      GoogleAPI: ${{ secrets.GoogleAPI }}
       
