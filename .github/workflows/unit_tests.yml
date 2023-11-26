@@ -6,7 +6,7 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     env:
-      GoogleAPI: ${{ secrets.GOOGLEAPI }}
+      GoogleAPI: AIzaSyA3bKSxxWSYoB5hlo1rb4PJGk8ifMuEAg8
       
     steps:
       - uses: actions/checkout@v4
