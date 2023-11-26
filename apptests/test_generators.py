@@ -1,5 +1,8 @@
 import unittest
 from copy import deepcopy
+from pathlib import Path
+import json
+from unittest.mock import mock_open, patch
 
 import generators.youtube_generator as gen
 
@@ -50,6 +53,19 @@ parsed_example = [
 
 
 search_request = {
+    "args": {'maxResults': 10,
+ 'pageToken': None,
+ 'q': 'Travel & Events',
+ 'regionCode': 'US',
+ 'relevanceLanguage': 'en',
+ 'topicId': None,
+ 'videoCategoryId': '19',
+ 'videoDuration': 'medium',
+ 'videoLicense': 'creativeCommon'}
+}
+
+
+results_example = {
     "args": {
         "maxResults": 10,
         "q": "Travel & Events",
@@ -58,9 +74,9 @@ search_request = {
         "videoCategoryId": "19",
         "videoDuration": "medium",
         "videoLicense": "creativeCommon",
+        "pageToken": "CAEQAA"
     }
 }
-
 
 class Test_videos_details_request(unittest.TestCase):
     def setUp(self) -> None:
@@ -212,9 +228,44 @@ class Test_add_transcripts_info(unittest.TestCase):
     #     self.assertIsNone(video.get("manuallyCreatedTranscripts"))
     #     self.assertIsNone(video.get("generatedTranscripts"))
 
-
 class Test_save_as_json(unittest.TestCase):
-    pass
+
+    @patch('generators.youtube_generator.time') 
+    @patch('builtins.open', new_callable=mock_open)
+    def test_valid_data(self, mock_open, mock_time):
+        category = "Test Category"
+
+        mock_time.strftime.return_value = "20231126-000000"
+        mock_open.return_value.write.return_value = len(results_example)
+
+        with patch('pathlib.Path.mkdir') as mock_mkdir:
+            gen.save_as_json(results_example, "/path/to/destination", category)
+
+        expected_filename = "TestCategory_en_CAEQAA_20231126-000000.json"
+        expected_filepath = Path("/path/to/destination/" + expected_filename)
+
+        mock_mkdir.assert_called_once_with(exist_ok=True)
+
+        mock_open.assert_called_once_with(expected_filepath, "w", encoding="utf-8")
+
+        write_call_args = mock_open.return_value.__enter__().write.call_args_list
+        written_content = ""
+        for call_args, _ in write_call_args:
+            written_content += call_args[0]
+        expected_content = json.dumps(results_example, ensure_ascii=False, indent=4, sort_keys=True)
+        self.assertEqual(written_content, expected_content)
+
+    #it should return user friendly error (not return AtrributeError and stop program)
+    # @patch('generators.youtube_generator.time') 
+    # @patch('builtins.open', new_callable=mock_open)
+    # def test_invalid_keys(self, mock_open, mock_time):
+    #     category = "Test Category"
+
+    #     mock_time.strftime.return_value = "20231126-000000"
+    #     mock_open.return_value.write.return_value = len(results_example)
+
+    #     with patch('pathlib.Path.mkdir'):
+    #         gen.save_as_json({}, "/path/to/destination", category)
 
 
 class Test_generate(unittest.TestCase):
