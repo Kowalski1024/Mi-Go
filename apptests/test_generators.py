@@ -1,7 +1,7 @@
+import json
 import unittest
 from copy import deepcopy
 from pathlib import Path
-import json
 from unittest.mock import mock_open, patch
 
 import generators.youtube_generator as gen
