@@ -1,4 +1,5 @@
 import unittest
+from copy import deepcopy
 
 import generators.youtube_generator as gen
 
@@ -9,48 +10,44 @@ empty_response_details = {
     "pageInfo": {"resultsPerPage": 0, "totalResults": 0},
 }
 example_response = {
-  "kind": "youtube#searchListResponse",
-  "etag": "wPpqdJzsY8IQM6ZYDqXcwWLEiVM",
-  "nextPageToken": "CAEQAA",
-  "regionCode": "US",
-  "pageInfo": {
-    "totalResults": 273,
-    "resultsPerPage": 1
-  },
-  "items": [
+    "kind": "youtube#searchListResponse",
+    "etag": "wPpqdJzsY8IQM6ZYDqXcwWLEiVM",
+    "nextPageToken": "CAEQAA",
+    "regionCode": "US",
+    "pageInfo": {"totalResults": 273, "resultsPerPage": 1},
+    "items": [
+        {
+            "kind": "youtube#searchResult",
+            "etag": "NBmdLBv-G2RxAuLNA7IPe_s4x7Q",
+            "id": {"kind": "youtube#video", "videoId": "YazZwd48ws0"},
+            "snippet": {
+                "publishedAt": "2016-12-21T11:09:18Z",
+                "channelId": "UCWlvkaA27BCrcYG6gA0K8UA",
+                "title": "We create your Bucket List Trips and Events | Discover the Baltics with SMS Frankfurt Group Travel",
+                "description": "Tailormade Event and Incentives | Discover the Baltics with SMS Frankfurt Group Travel - We create your Bucket List Trips and ...",
+                "thumbnails": {
+                    "default": {
+                        "url": "https://i.ytimg.com/vi/YazZwd48ws0/default.jpg",
+                        "width": 120,
+                        "height": 90,
+                    }
+                },
+                "channelTitle": "SMS Frankfurt Group Travel",
+                "publishTime": "2016-12-21T11:09:18Z",
+            },
+        }
+    ],
+}
+parsed_example = [
     {
-      "kind": "youtube#searchResult",
-      "etag": "NBmdLBv-G2RxAuLNA7IPe_s4x7Q",
-      "id": {
-        "kind": "youtube#video",
-        "videoId": "YazZwd48ws0"
-      },
-      "snippet": {
-        "publishedAt": "2016-12-21T11:09:18Z",
+        "videoId": "YazZwd48ws0",
         "channelId": "UCWlvkaA27BCrcYG6gA0K8UA",
         "title": "We create your Bucket List Trips and Events | Discover the Baltics with SMS Frankfurt Group Travel",
-        "description": "Tailormade Event and Incentives | Discover the Baltics with SMS Frankfurt Group Travel - We create your Bucket List Trips and ...",
-        "thumbnails": {
-          "default": {
-            "url": "https://i.ytimg.com/vi/YazZwd48ws0/default.jpg",
-            "width": 120,
-            "height": 90
-          }
-        },
         "channelTitle": "SMS Frankfurt Group Travel",
-        "publishTime": "2016-12-21T11:09:18Z"
-      }
+        "publishTime": "2016-12-21T11:09:18Z",
     }
-  ]
-}
-parsed_example = [{
-    "videoId": "YazZwd48ws0",
-    "channelId": "UCWlvkaA27BCrcYG6gA0K8UA",
-    "title": "We create your Bucket List Trips and Events | Discover the Baltics with SMS Frankfurt Group Travel",
-    "channelTitle": "SMS Frankfurt Group Travel",
-    "publishTime": "2016-12-21T11:09:18Z"
-}]
-    
+]
+
 
 search_request = {
     "args": {
@@ -70,7 +67,7 @@ class Test_videos_details_request(unittest.TestCase):
         self.expected_keys = ["kind", "etag", "items", "pageInfo"]
         self.valid_ids = ["gI8VlFK5Jp4", "YazZwd48ws0"]
         return super().setUp()
-    
+
     def test_returned_type(self):
         self.assertIsInstance(gen.videos_details_request([]), dict)
 
@@ -141,9 +138,15 @@ class Test_search_request(unittest.TestCase):
 
 class Test_results_parser(unittest.TestCase):
     def setUp(self) -> None:
-        self.expected_keys = ["videoId", "channelId", "channelTitle", "publishTime", "title"]
+        self.expected_keys = [
+            "videoId",
+            "channelId",
+            "channelTitle",
+            "publishTime",
+            "title",
+        ]
         return super().setUp()
-    
+
     def test_valid_params(self):
         response = gen.results_parser(example_response)
         self.assertIsNotNone(response.get("items"))
@@ -156,28 +159,66 @@ class Test_results_parser(unittest.TestCase):
                 self.assertIsNotNone(response.get("items")[0].get(key))
 
     # it should check if results have items key
-    # def test_empty_results_param(self): 
+    # def test_empty_results_param(self):
     #     self.assertRaises(KeyError, gen.results_parser({}))
 
-class Test_add_video_details(unittest.TestCase): 
+
+class Test_add_video_details(unittest.TestCase):
     def setUp(self) -> None:
-        self.ok_parsed_example = parsed_example.copy()
-        self.nok_parsed_example = parsed_example.copy()
+        self.ok_parsed_example = deepcopy(parsed_example)
+        self.nok_parsed_example = deepcopy(parsed_example)
         return super().setUp()
-    
+
     def test_valid_video_list(self):
         gen.add_video_details(self.ok_parsed_example)
         video = self.ok_parsed_example[0]
         self.assertIsNotNone(video.get("duration"))
         self.assertIsNotNone(video.get("defaultAudioLanguage"))
 
-    #it should check if videoId key exists
+    # it should check if videoId key exists
+    # def test_invalid_video_list(self):
+    #     self.nok_parsed_example[0].pop("videoId")
+    #     gen.add_video_details(self.nok_parsed_example)
+    #     video = self.nok_parsed_example[0]
+    #     self.assertIsNone(video.get("duration"))
+    #     self.assertIsNone(video.get("defaultAudioLanguage"))
+
+
+class Test_add_transcripts_info(unittest.TestCase):
+    def setUp(self) -> None:
+        self.ok_parsed_example = deepcopy(parsed_example)
+        self.nok1_parsed_example = deepcopy(parsed_example)
+        self.nok2_parsed_example = deepcopy(parsed_example)
+        return super().setUp()
+
+    def test_valid_video_list(self):
+        gen.add_transcripts_info(self.ok_parsed_example)
+        video = self.ok_parsed_example[0]
+        self.assertIsNotNone(video.get("manuallyCreatedTranscripts"))
+        self.assertIsNotNone(video.get("generatedTranscripts"))
+
     def test_invalid_video_list(self):
-        self.nok_parsed_example[0].pop("videoId")
-        gen.add_video_details(self.nok_parsed_example)
-        video = self.nok_parsed_example[0]
-        self.assertIsNone(video.get("duration"))
-        self.assertIsNone(video.get("defaultAudioLanguage"))
+        self.nok2_parsed_example[0].pop("title")
+        gen.add_transcripts_info(self.nok2_parsed_example)
+        video = self.nok2_parsed_example[0]
+        self.assertIsNotNone(video.get("manuallyCreatedTranscripts"))
+        self.assertIsNotNone(video.get("generatedTranscripts"))
+
+    # it should check if videoId key exists
+    # def test_lack_of_videoid(self):
+    #     self.nok1_parsed_example[0].pop("videoId")
+    #     gen.add_transcripts_info(self.nok1_parsed_example)
+    #     video = self.nok1_parsed_example[0]
+    #     self.assertIsNone(video.get("manuallyCreatedTranscripts"))
+    #     self.assertIsNone(video.get("generatedTranscripts"))
+
+
+class Test_save_as_json(unittest.TestCase):
+    pass
+
+
+class Test_generate(unittest.TestCase):
+    pass
 
 
 if __name__ == "__main__":
