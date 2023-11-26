@@ -280,7 +280,7 @@ class Test_generate(unittest.TestCase):
         print(parsed_results)
         self.assertIsNotNone(parsed_results["items"][0]["generatedTranscripts"])
 
-    #it should return user friendly error (not return KeyError and stop program)
+    # it should return user friendly error (not return KeyError and stop program)
     # def test_invalid_args(self):
     #     args = deepcopy(search_request.get("args")).pop("maxResults")
     #     self.assertRaises(KeyError, gen.generate(args))
@@ -289,6 +289,7 @@ class Test_generate(unittest.TestCase):
 
     # def test_empty_args(self):
     #     self.assertRaises(KeyError, gen.generate({}))
+
 
 if __name__ == "__main__":
     unittest.main()
