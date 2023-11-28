@@ -1,1 +1,0 @@
-from testrunners.tests.transcript_test import TranscriptTest

@@ -5,7 +5,7 @@ from collections import defaultdict
 
 from loguru import logger
 
-from testrunners.tests import TranscriptTest
+from .transcript_test import TranscriptTest
 
 
 class TestRegistry:
