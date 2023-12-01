@@ -1,5 +1,5 @@
 import unittest
-from os import environ
+from os import environ, listdir
 from copy import deepcopy
 
 from testrunners.youtube_runner import YouTubeTestRunner
@@ -47,6 +47,7 @@ details_result = [
             "videoId": "YazZwd48ws0"
         }
 ]
+
 search_request = {
     "args": {
         "maxResults": 10,
@@ -104,16 +105,14 @@ testplan["items"] = [
 
 class Test_YoutubeTestRunner_video_details(unittest.TestCase):
     def setUp(self) -> None:
-        self.runner1 = YouTubeTestRunner("Travel&Events_en_CAUQAQ_20231126-201522.json", "audio", iterations=1)
+        self.testrunner = YouTubeTestRunner("", "audio", iterations=1)
         return super().setUp()
     
     def test_none_dict(self):
-        runner = YouTubeTestRunner("", "audio", iterations=1)
-        self.assertEqual(runner.video_details(None), [])
+        self.assertEqual(self.testrunner.video_details(None), [])
 
     def test_empty_dict(self):
-        runner = YouTubeTestRunner("", "audio", iterations=1)
-        self.assertEqual(runner.video_details({}), [])
+        self.assertEqual(self.testrunner.video_details({}), [])
 
     def test_valid_dict(self):
         runner = YouTubeTestRunner("simpleTest.json", "audio", iterations=1)
@@ -122,21 +121,25 @@ class Test_YoutubeTestRunner_video_details(unittest.TestCase):
 
 class Test_YoutubeTestRunner_save_results(unittest.TestCase):
     def setUp(self) -> None:
-        self.runner1 = YouTubeTestRunner("Travel&Events_en_CAUQAQ_20231126-201522.json", "audio", iterations=1)
+        self.testrunner = YouTubeTestRunner("", "audio", iterations=1)
         return super().setUp()
     
     def test_none_dict(self):
-        runner = YouTubeTestRunner("", "audio", iterations=1)
-        runner.save_results(None)
-        # check if amount of json files in apptest dir is still = 2
+        self.testrunner.save_results(None)
+        
+        json_files = [file for file in listdir("apptests") if file.endswith(".json")]
+        self.assertEqual(len(json_files), 2)
 
     def test_empty_dict(self):
-        runner = YouTubeTestRunner("", "audio", iterations=1)
-        runner.save_results({})
-        # check if amount of json files in apptest dir is still = 2
+        self.testrunner.save_results({})
+
+        json_files = [file for file in listdir("apptests") if file.endswith(".json")]
+        self.assertEqual(len(json_files), 2)
 
     def test_valid_dict(self):
         runner = YouTubeTestRunner("simpleTest.json", "audio", iterations=1)
         generated_testplan = generate(search_request.get("args"))
         runner.save_results(generated_testplan)
-        #check if amount of json files in apptest dir is now = 3
+    
+        json_files = [file for file in listdir("apptests") if file.endswith(".json")]
+        self.assertEqual(len(json_files), 3)
