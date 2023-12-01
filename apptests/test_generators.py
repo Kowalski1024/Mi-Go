@@ -2,7 +2,7 @@ import json
 import unittest
 from copy import deepcopy
 from pathlib import Path
-from unittest.mock import mock_open, patch
+from unittest.mock import mock_open, patch, MagicMock
 
 import generators.youtube_generator as gen
 
@@ -290,6 +290,36 @@ class Test_generate(unittest.TestCase):
     # def test_empty_args(self):
     #     self.assertRaises(KeyError, gen.generate({}))
 
+# class TestSearchRequest(unittest.TestCase):
+
+#     @patch('googleapiclient.discovery.build')
+#     def test_search_request(self, mock_build):
+#         youtube_api = MagicMock()
+
+#         mock_execute = MagicMock()
+#         youtube_api.search().list().execute = mock_execute
+
+#         expected_response = {
+#             "items": [{"id": "video_id_1", "snippet": {"title": "Video 1"}}],
+#             "videoCategoryId": "your_category_id",
+#         }
+#         mock_execute.return_value = expected_response
+#         mock_build.return_value = youtube_api
+
+#         response = gen.search_request("en_US", "GB")
+#         mock_build.assert_called_once_with(
+#             api_service_name='youtube',
+#             api_version='v3',
+#             developerKey='AIzaSyCiTsa6DvPpfMOJDGSqPnDJ5tOUGAwuvqg'  
+#         )
+#         youtube_api.search().list.assert_called_once_with(
+#             **args,
+#             part="snippet",
+#             type="video",
+#             videoCaption="closedCaption",
+#         )
+#         mock_execute.assert_called_once()
+#         self.assertEqual(response, expected_response)
 
 if __name__ == "__main__":
     unittest.main()
