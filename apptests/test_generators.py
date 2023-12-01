@@ -2,7 +2,7 @@ import json
 import unittest
 from copy import deepcopy
 from pathlib import Path
-from unittest.mock import mock_open, patch, MagicMock
+from unittest.mock import MagicMock, mock_open, patch
 
 import generators.youtube_generator as gen
 
@@ -290,6 +290,7 @@ class Test_generate(unittest.TestCase):
     # def test_empty_args(self):
     #     self.assertRaises(KeyError, gen.generate({}))
 
+
 # class TestSearchRequest(unittest.TestCase):
 
 #     @patch('googleapiclient.discovery.build')
@@ -310,7 +311,7 @@ class Test_generate(unittest.TestCase):
 #         mock_build.assert_called_once_with(
 #             api_service_name='youtube',
 #             api_version='v3',
-#             developerKey='AIzaSyCiTsa6DvPpfMOJDGSqPnDJ5tOUGAwuvqg'  
+#             developerKey='AIzaSyCiTsa6DvPpfMOJDGSqPnDJ5tOUGAwuvqg'
 #         )
 #         youtube_api.search().list.assert_called_once_with(
 #             **args,
