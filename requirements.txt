@@ -1,6 +1,10 @@
-loguru~=0.6.0
-pytube~=15.0.0
+black==23.11.0
+google-api-python-client==2.109.0
+isort==5.12.0
+jiwer==3.0.3
+loguru==0.7.2
+numpy==1.26.2
+SQLAlchemy==2.0.23
 yt-dlp
-youtube-transcript-api
-google-api-python-client
-jiwer==3.0.1
+youtube-transcript-api==0.6.1
+yt-dlp==2023.11.16

@@ -2,10 +2,11 @@ import dataclasses
 import re
 from pathlib import Path
 
+import yt_dlp as youtube_dl
 from loguru import logger
 from youtube_transcript_api import YouTubeTranscriptApi
 
-from libs.normalizers import title_normalizer
+from src.normalizers import title_normalizer
 
 
 @dataclasses.dataclass
@@ -20,13 +21,12 @@ class YouTubeVideo:
     generatedTranscripts: list
     manuallyCreatedTranscripts: list
 
-    def download_mp3(self, destination: Path, downloader: str = "youtube_dl") -> Path:
+    def download_mp3(self, destination: Path) -> Path:
         """
         Download video as mp3
 
         Args:
             destination: destination directory
-            downloader: downloader to use, either 'youtube_dl' or 'pytube'
 
         Returns:
             Path to downloaded file
@@ -35,44 +35,27 @@ class YouTubeVideo:
         title = title_normalizer(self.title)
         url = f"https://www.youtube.com/watch?v={self.videoId}"
 
-        logger.info(
-            f"Downloading... (videoId={self.videoId}) '{self.title}' as '{title}.mp3'"
-        )
+        logger.info(f"Downloading... (videoId={self.videoId}) '{self.title}' as '{title}.mp3'")
 
         if destination.joinpath(f"{title}.mp3").exists():
             logger.info(f"File '{title}.mp3' already exists, skipping download")
             return destination.joinpath(f"{title}.mp3")
 
-        if downloader == "youtube_dl":
-            import yt_dlp as youtube_dl
+        ydl_opts = {
+            "format": "bestaudio/best",
+            ""
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "mp3",
+                    "preferredquality": "192",
+                }
+            ],
+            "outtmpl": f"{destination}/{title}",
+        }
 
-            ydl_opts = {
-                "format": "bestaudio/best",
-                ""
-                "postprocessors": [
-                    {
-                        "key": "FFmpegExtractAudio",
-                        "preferredcodec": "mp3",
-                        "preferredquality": "192",
-                    }
-                ],
-                "outtmpl": f"{destination}/{title}",
-            }
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                ydl.download([url])
-        else:
-            from pytube import YouTube, exceptions
-
-            try:
-                audio = YouTube(url).streams.filter(only_audio=True).first()
-            except (
-                exceptions.AgeRestrictedError,
-                exceptions.VideoUnavailable,
-                exceptions.VideoPrivate,
-            ) as e:
-                raise ValueError(f"Failed to download '{self.title}': {e}")
-
-            audio.download(output_path=destination, filename=f"{title}.mp3")
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([url])
 
         return destination.joinpath(f"{title}.mp3")
 
@@ -115,14 +98,10 @@ class YouTubeVideo:
 
         if generated:
             language = _find(self.generatedTranscripts)
-            srt = transcripts.find_generated_transcript(
-                language_codes=[language]
-            ).fetch()
+            srt = transcripts.find_generated_transcript(language_codes=[language]).fetch()
         else:
             language = _find(self.manuallyCreatedTranscripts)
-            srt = transcripts.find_manually_created_transcript(
-                language_codes=[language]
-            ).fetch()
+            srt = transcripts.find_manually_created_transcript(language_codes=[language]).fetch()
 
         logger.info(f"Downloaded transcript {language}")
 

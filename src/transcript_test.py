@@ -8,7 +8,7 @@ class TranscriptTest:
     Base class for transcript tests, all transcript tests should inherit from this class
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, model_name: str, language: str, **kwargs):
         # transcriber is a function that takes a path to an audio file and returns a transcript
         # should be provided by the model
         self.transcriber: Optional[Callable] = None
@@ -16,7 +16,20 @@ class TranscriptTest:
         # normalizer is a function that takes a transcript and returns a normalized transcript
         # see libs/normalizers.py for examples
         self.normalizer: Optional[Callable] = None
-        self.language: str = "en"
+        self.language: str = language
+        self.model_name: str = model_name
+
+    def additional_info(self) -> dict:
+        """
+        Override this method, should return additional info about the test
+
+        Returns:
+            dict with additional info
+        """
+        return {
+            "modelName": self.model_name,
+            "language": self.language,
+        }
 
     @staticmethod
     def subparser(subparser: argparse.ArgumentParser):
@@ -25,24 +38,6 @@ class TranscriptTest:
 
         Args:
             parser: parser to add arguments to
-        """
-        pass
-
-    def testplan_postprocess(self, testplan: dict):
-        """
-        Use this method to postprocess the testplan, for example to add more details to the testplan
-
-        Args:
-            testplan: testplan to postprocess
-        """
-        pass
-
-    def insert_to_database(self, testplan: dict):
-        """
-        Use this method to insert the testplan to the database
-
-        Args:
-            testplan: testplan to insert
         """
         pass
 

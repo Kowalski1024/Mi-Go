@@ -4,11 +4,9 @@ from pathlib import Path
 import numpy as np
 import torch
 import whisper
+from src.differs import jiwer_differ
+from src.transcript_test import TranscriptTest
 from whisper.normalizers import EnglishTextNormalizer
-
-import databases
-from libs.differs import jiwer_differ
-from testrunners.transcript_test import TranscriptTest
 
 
 class WhisperTest(TranscriptTest):
@@ -16,13 +14,11 @@ class WhisperTest(TranscriptTest):
     Test to evaluate the difference between the model transcript and the target transcript
     """
 
-    def __init__(
-        self, model_type: str, model_language: str = None, gpu: int = 0, **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.model_type = model_type
-        self.model_language = model_language
-        self.model = whisper.load_model(model_type, device=torch.device(f"cuda:{gpu}"))
+    def __init__(self, model_name: str, language: str = None, gpu: int = 0, **kwargs):
+        super().__init__(model_name, language, **kwargs)
+        self.model_name = model_name
+        self.model_language = language
+        self.model = whisper.load_model(model_name, device=torch.device(f"cuda:{gpu}"))
 
         self.normalizer = EnglishTextNormalizer()
         self.transcriber = self.model.transcribe
@@ -40,7 +36,7 @@ class WhisperTest(TranscriptTest):
         """
 
         results = self.transcriber(
-            audio=str(audio_path), verbose=False, language=self.model_language
+            audio=str(audio_path), verbose=False, language=self.model_language, fp16=False
         )
         self.language = results["language"]
 
@@ -65,37 +61,6 @@ class WhisperTest(TranscriptTest):
         differ_results["detectedLanguage"] = self.language
 
         return differ_results
-
-    def testplan_postprocess(self, testplan):
-        """
-        Add model type to the testplan
-
-        Args:
-            testplan: testplan to postprocess
-        """
-        # calculate var and mean
-        wer = np.array(
-            [
-                video["results"]["wer"]
-                for video in testplan["items"]
-                if "error" not in video["results"]
-            ]
-        )
-        if len(wer) == 0:
-            mean, std = None, None
-        else:
-            mean = np.mean(wer)
-            std = np.std(wer)
-
-        testplan["model"] = {
-            "name": self.model_type,
-            "language": self.model_language,
-            "werMean": mean,
-            "werStd": std,
-        }
-
-    def insert_to_database(self, testplan):
-        databases.insert_transcript_diff_results(testplan, self.differ)
 
     @staticmethod
     def subparser(subparser: argparse.ArgumentParser):
@@ -122,7 +87,7 @@ class WhisperTest(TranscriptTest):
             "-m",
             "--model-type",
             type=str,
-            dest="model_type",
+            dest="model_name",
             choices=model_types,
             required=True,
         )
@@ -140,10 +105,10 @@ class WhisperTest(TranscriptTest):
         )
 
         subparser.add_argument(
-            "-ml",
-            "--model-language",
+            "-l",
+            "--language",
             type=str,
-            dest="model_language",
+            dest="language",
             default=None,
             required=False,
             help=f"Model language (default: None)",

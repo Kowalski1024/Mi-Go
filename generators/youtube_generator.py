@@ -18,9 +18,7 @@ api_service_name = "youtube"
 api_version = "v3"
 
 # Initialize the Youtube API
-youtube_api = googleapiclient.discovery.build(
-    api_service_name, api_version, developerKey=api_key
-)
+youtube_api = googleapiclient.discovery.build(api_service_name, api_version, developerKey=api_key)
 
 
 def videos_details_request(videos: list) -> dict:
@@ -35,9 +33,7 @@ def videos_details_request(videos: list) -> dict:
     """
 
     logger.info("Request videos details")
-    request = youtube_api.videos().list(
-        part="contentDetails,snippet", id=",".join(videos)
-    )
+    request = youtube_api.videos().list(part="contentDetails,snippet", id=",".join(videos))
 
     return request.execute()
 
@@ -56,9 +52,7 @@ def categories_request(hl: str, region_code: str) -> dict:
     """
 
     logger.info("Request categories")
-    request = youtube_api.videoCategories().list(
-        part="snippet", hl=hl, regionCode=region_code
-    )
+    request = youtube_api.videoCategories().list(part="snippet", hl=hl, regionCode=region_code)
 
     return request.execute()
 
@@ -330,9 +324,7 @@ def main():
 
     api_args = vars(args)
     dest = api_args.pop("outputDirectory")
-    categories = assignable_categories(
-        hl=args.relevanceLanguage, region_code=args.regionCode
-    )
+    categories = assignable_categories(hl=args.relevanceLanguage, region_code=args.regionCode)
     category_id = int(args.videoCategoryId)
 
     # check if category id is assignable
@@ -347,9 +339,7 @@ def main():
 
     search_results = generate(api_args)
 
-    save_as_json(
-        results=search_results, destination=dest, category=categories[category_id]
-    )
+    save_as_json(results=search_results, destination=dest, category=categories[category_id])
 
 
 if __name__ == "__main__":
