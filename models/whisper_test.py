@@ -4,9 +4,10 @@ from pathlib import Path
 import numpy as np
 import torch
 import whisper
+from whisper.normalizers import EnglishTextNormalizer
+
 from src.differs import jiwer_differ
 from src.transcript_test import TranscriptTest
-from whisper.normalizers import EnglishTextNormalizer
 
 
 class WhisperTest(TranscriptTest):
