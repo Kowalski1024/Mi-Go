@@ -16,7 +16,7 @@ as well.
 
 ### General idea of the framework
 
-![Mi-Go schema](https://github.com/Kowalski1024/Mi-Go/blob/master/schema.png)
+![Mi-Go schema](docs/schema.png)
 
 ## Motivation
 
@@ -28,7 +28,7 @@ adaptability and performance of speech recognition models in real-world scenario
 Additionally, Mi-Go is motivated by the desire to test the latest state-of-the-art model for speech
 recognition, [Whisper](https://github.com/openai/whisper), which is open-source and freely available on GitHub.
 
-![Framework pipeline](https://github.com/Kowalski1024/Mi-Go/blob/master/pipeline.png)
+![Framework pipeline](docs/pipeline.png)
 
 # Framework structure
 
@@ -42,7 +42,7 @@ language, category, duration, and other criteria.
 
 ## TestRunner
 
-The [TestRunner](https://github.com/Kowalski1024/Mi-Go/blob/master/testrunners/youtube_runner.py) is a script that
+The [TestRunner](src/youtube_runner.py) is a script that
 executes tests on a specific dataset/testplan, meaning it is designed to work with a particular dataset and testplan. It
 prepares the data for testing, runs the tests, and stores the results in a database. The TestRunner features a register
 decorator that allows users to easily add new transcript test to the class so they can be easily chosen in command-line
@@ -55,21 +55,16 @@ used to generate the next testplan iteration.
 
 ## TranscriptTest
 
-The [TranscriptTest](https://github.com/Kowalski1024/Mi-Go/blob/master/testrunners/tests/transcript_test.py) is a
+The [TranscriptTest](src/transcript_test.py) is a
 model-specific script that runs the speech-to-text model and compares its output to the ground-truth transcript.
 
 **TranscriptDifference** is an example of such a transcript test designed for testing Whisper models but can be used for
 other models as well. It normalizes the transcripts using a built-in Whisper normalization function and uses a JiWER
 library to calculate speech recognition metrics.
 
-### Libs
-
-The [Libs folder](https://github.com/Kowalski1024/Mi-Go/blob/master/libs) contains various helper functions and classes
-used by the framework, like basic normalization or comparison functions, database classes, and others.
-
 ### Databases
 
-The [Databases](https://github.com/Kowalski1024/Mi-Go/blob/master/databases) is a SQLite database that stores the
+The [Databases](src/database) is a SQLite database that stores the
 results of the tests, so they can be easily accessed, filtered and analyzed. Designed to support YouTubeTestRunner.
 
 ## Installation
@@ -106,13 +101,13 @@ export GoogleAPI=<your_google_api_key>
 Run the testplan generator, example:
 
 ```
-python generators/testplan_generator.py 10 -o ./testplans -c 27 -l en
+python generators/youtube_generator.py 10 -o ./testplans -c 27 -l en
 ```
 
 Run the testrunner, example:
 
 ```
-python testrunners/youtube_runner.py ./testplans/{testplan.json} -st DummyTest
+python youtube_runner.py ./testplans/{testplan.json} DummyTest
 ```
 
 

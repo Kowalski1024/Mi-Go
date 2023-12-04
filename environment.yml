@@ -1,0 +1,9 @@
+name: mi-go
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - youtube-dl
+  - pip:
+    - -r file:requirements.txt
