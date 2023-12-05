@@ -14,7 +14,7 @@ def jiwer_differ(model_transcript: str, yt_transcript: str) -> dict:
     """
 
     results = jiwer.compute_measures(model_transcript, yt_transcript)
-    results.pop("ops")
-    results.pop("truth")
-    results.pop("hypothesis")
+    results.pop("ops", None)
+    results.pop("truth", None)
+    results.pop("hypothesis", None)
     return results

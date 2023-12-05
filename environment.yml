@@ -4,6 +4,8 @@ channels:
   - defaults
 dependencies:
   - python=3.10
+  - pip=23.3.1
   - youtube-dl
+  - ffmpeg
   - pip:
-    - -r file:requirements.txt
+    - -r requirements.txt

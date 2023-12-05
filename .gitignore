@@ -1,0 +1,11 @@
+__pycache__
+venv
+.*
+cache/*
+logs/*
+output/*
+testplans/*
+*.sqlite
+
+!.gitignore
+!.github/workflows/*

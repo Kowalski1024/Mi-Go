@@ -43,10 +43,12 @@ class YouTubeTestRunner(TestRunner):
         self._save_transcripts = save_transcripts
         self._save_to_database = save_to_database
         self._keep_audio = keep_audio
+        self._session = None
 
-        engine = db.create_engine(f"sqlite:///youtube.sqlite")
-        YouTubeBase.metadata.create_all(engine)
-        self._session = sessionmaker(bind=engine)()
+        if self._save_to_database:
+            engine = db.create_engine(f"sqlite:///youtube.sqlite")
+            YouTubeBase.metadata.create_all(engine)
+            self._session = sessionmaker(bind=engine)()
 
     def run(self) -> None:
         if self.tester.transcriber is None:
@@ -156,7 +158,9 @@ class YouTubeTestRunner(TestRunner):
         with open(path, "x", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False)
 
-        if self._save_to_database and not insert_youtube_result(self._session, filename, results):
+        if self._save_to_database and not insert_youtube_result(
+            self._session, filename, results
+        ):
             logger.warning(f"Failed to save results to database")
 
     def __repr__(self):

@@ -22,7 +22,12 @@ def insert_youtube_result(
     for video in testplan["items"]:
         video_id = video["videoId"]
 
-        if session.query(YouTubeVideo).filter(YouTubeVideo.video_id == video_id).count() == 0:
+        if (
+            session.query(YouTubeVideo)
+            .filter(YouTubeVideo.video_id == video_id)
+            .count()
+            == 0
+        ):
             video_obj = YouTubeVideo.from_video(video)
             session.add(video_obj)
 

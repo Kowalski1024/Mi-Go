@@ -35,7 +35,9 @@ class YouTubeVideo:
         title = title_normalizer(self.title)
         url = f"https://www.youtube.com/watch?v={self.videoId}"
 
-        logger.info(f"Downloading... (videoId={self.videoId}) '{self.title}' as '{title}.mp3'")
+        logger.info(
+            f"Downloading... (videoId={self.videoId}) '{self.title}' as '{title}.mp3'"
+        )
 
         if destination.joinpath(f"{title}.mp3").exists():
             logger.info(f"File '{title}.mp3' already exists, skipping download")
@@ -98,10 +100,14 @@ class YouTubeVideo:
 
         if generated:
             language = _find(self.generatedTranscripts)
-            srt = transcripts.find_generated_transcript(language_codes=[language]).fetch()
+            srt = transcripts.find_generated_transcript(
+                language_codes=[language]
+            ).fetch()
         else:
             language = _find(self.manuallyCreatedTranscripts)
-            srt = transcripts.find_manually_created_transcript(language_codes=[language]).fetch()
+            srt = transcripts.find_manually_created_transcript(
+                language_codes=[language]
+            ).fetch()
 
         logger.info(f"Downloaded transcript {language}")
 
