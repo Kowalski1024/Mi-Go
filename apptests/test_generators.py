@@ -122,6 +122,7 @@ class Test_assignable_categories(unittest.TestCase):
     def test_valid_params(self):
         response = gen.assignable_categories("en_US", "GB")
         self.assertTrue(len(response) > 0)
+        self.assertIsInstance(response, dict)
 
     def test_invalid_params(self):
         self.assertRaises(KeyError, gen.assignable_categories("x", ""))
@@ -136,10 +137,11 @@ class Test_search_request(unittest.TestCase):
 
     def test_valid_params(self):
         response = gen.search_request(args=search_request.get("args"))
+        self.assertIsInstance(response, dict)
         self.assertTrue(len(response) > 0)
         self.assertTrue("videoCategoryId" in response.keys())
         self.assertEqual(response.get("videoCategoryId"), search_request.get("args").get("videoCategoryId"))
-
+         
 
 class Test_results_parser(unittest.TestCase):
     def setUp(self) -> None:
@@ -154,10 +156,12 @@ class Test_results_parser(unittest.TestCase):
 
     def test_valid_params(self):
         response = gen.results_parser(deepcopy(example_response))
-        self.assertIsNotNone(response.get("items"))
 
+        self.assertIsInstance(response, dict)
+        self.assertIsNotNone(response.get("items"))
         self.assertIsNone(response.get("kind"))
         self.assertIsNone(response.get("pageInfo"))
+
         for key in self.expected_keys:
             with self.subTest(key=key):
                 self.assertIn(key, response.get("items")[0])
@@ -195,6 +199,7 @@ class Test_add_transcripts_info(unittest.TestCase):
     def test_valid_video_list(self):
         gen.add_transcripts_info(self.ok_parsed_example.get("items"))
         video = self.ok_parsed_example.get("items")[0]
+
         self.assertIsNotNone(video.get("manuallyCreatedTranscripts"))
         self.assertIsNotNone(video.get("generatedTranscripts"))
 
@@ -238,24 +243,24 @@ class Test_save_as_json(unittest.TestCase):
         )
         self.assertEqual(written_content, expected_content)
 
-    # it should return user friendly error (not return AtrributeError and stop program)
-    # @patch('generators.youtube_generator.time')
-    # @patch('builtins.open', new_callable=mock_open)
-    # def test_invalid_keys(self, mock_open, mock_time):
-    #     category = "Test Category"
+    @patch('generators.youtube_generator.time')
+    @patch('builtins.open', new_callable=mock_open)
+    def test_invalid_keys(self, mock_open, mock_time):
+        category = "Test Category"
 
-    #     mock_time.strftime.return_value = "20231126-000000"
-    #     mock_open.return_value.write.return_value = len(results_example)
+        mock_time.strftime.return_value = "20231126-000000"
+        mock_open.return_value.write.return_value = len(results_example)
 
-    #     with patch('pathlib.Path.mkdir'):
-    #         gen.save_as_json({}, "/path/to/destination", category)
+        with patch('pathlib.Path.mkdir'):
+            self.assertRaises(KeyError, gen.save_as_json({}, "/path/to/destination", category))
 
 
 class Test_generate(unittest.TestCase):
     def test_valid_args(self):
         parsed_results = gen.generate(search_request.get("args"))
+
+        self.assertIsInstance(parsed_results, dict)
         self.assertIsNotNone(parsed_results)
-        print(parsed_results)
         self.assertIsNotNone(parsed_results["items"][0]["generatedTranscripts"])
 
     def test_invalid_args(self):
@@ -266,37 +271,6 @@ class Test_generate(unittest.TestCase):
     def test_empty_args(self):
         self.assertRaises(KeyError, gen.generate({}))
 
-
-# class TestSearchRequest(unittest.TestCase):
-
-#     @patch('googleapiclient.discovery.build')
-#     def test_search_request(self, mock_build):
-#         youtube_api = MagicMock()
-
-#         mock_execute = MagicMock()
-#         youtube_api.search().list().execute = mock_execute
-
-#         expected_response = {
-#             "items": [{"id": "video_id_1", "snippet": {"title": "Video 1"}}],
-#             "videoCategoryId": "your_category_id",
-#         }
-#         mock_execute.return_value = expected_response
-#         mock_build.return_value = youtube_api
-
-#         response = gen.search_request("en_US", "GB")
-#         mock_build.assert_called_once_with(
-#             api_service_name='youtube',
-#             api_version='v3',
-#             developerKey='AIzaSyCiTsa6DvPpfMOJDGSqPnDJ5tOUGAwuvqg'
-#         )
-#         youtube_api.search().list.assert_called_once_with(
-#             **args,
-#             part="snippet",
-#             type="video",
-#             videoCaption="closedCaption",
-#         )
-#         mock_execute.assert_called_once()
-#         self.assertEqual(response, expected_response)
 
 if __name__ == "__main__":
     unittest.main()
