@@ -16,6 +16,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install black isort
       - name: Lint with black
-        run: black --check .
+        run: black --check --line-length 88 .
       - name: Lint with isort
-        run: isort --check .
+        run: isort --profile black --check .
