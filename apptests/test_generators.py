@@ -41,15 +41,6 @@ example_response = {
         }
     ],
 }
-parsed_example = [
-    {
-        "videoId": "YazZwd48ws0",
-        "channelId": "UCWlvkaA27BCrcYG6gA0K8UA",
-        "title": "We create your Bucket List Trips and Events | Discover the Baltics with SMS Frankfurt Group Travel",
-        "channelTitle": "SMS Frankfurt Group Travel",
-        "publishTime": "2016-12-21T11:09:18Z",
-    }
-]
 
 
 search_request = {
@@ -113,46 +104,41 @@ class Test_videos_details_request(unittest.TestCase):
 
 
 class Test_categories_request(unittest.TestCase):
-    # should return info about 400 response?
-    # def test_returned_type(self):
-    #     self.assertIsInstance(gen.categories_request("", ""), dict)
+    def test_returned_type(self):
+        self.assertIsInstance(gen.categories_request("en_US", "GB"), dict)
 
-    # def test_invalid_params(self):
-    #     self.assertIsNotNone(gen.categories_request("invalid", "invalid").get("error"))
+    def test_invalid_params(self):
+        self.assertRaises(KeyError, gen.categories_request("invalid", "invalid"))
 
-    # def test_empty_params(self):
-    #     self.assertIsNotNone(gen.categories_request(None, None).get("error"))
+    def test_empty_params(self):
+        self.assertRaises(KeyError, gen.categories_request(None, None))
 
     def test_valid_params(self):
         response = gen.categories_request("en_US", "GB")
-        self.assertIsNone(response.get("error"))
         self.assertIsNotNone(response.get("items"))
 
 
 class Test_assignable_categories(unittest.TestCase):
     def test_valid_params(self):
         response = gen.assignable_categories("en_US", "GB")
-        self.assertIsNotNone(response.get(1))
+        self.assertTrue(len(response) > 0)
 
-    # same as above
-    # def test_invalid_params(self):
-    #     response = gen.assignable_categories("x", "")
-    #     self.assertIsNone(response.get(1))
-    #     self.assertNone(response.get("error"))
+    def test_invalid_params(self):
+        self.assertRaises(KeyError, gen.assignable_categories("x", ""))
 
 
 class Test_search_request(unittest.TestCase):
-    # def test_empty_dict_params(self):
-    #     response = gen.search_request(args={})
-    #     self.assertNotNil(response.get("error"))
+    def test_empty_dict_params(self):
+        self.assertRaises(KeyError, gen.search_request(args={}))
 
-    # def test_empty_params(self):
-    #     response = gen.search_request(args=None)
-    #     self.assertIsNotNone(response)
+    def test_empty_params(self):
+        self.assertRaises(KeyError, gen.search_request(args=None))
 
     def test_valid_params(self):
         response = gen.search_request(args=search_request.get("args"))
-        self.assertIsNotNone(response)
+        self.assertTrue(len(response) > 0)
+        self.assertTrue("videoCategoryId" in response.keys())
+        self.assertEqual(response.get("videoCategoryId"), search_request.get("args").get("videoCategoryId"))
 
 
 class Test_results_parser(unittest.TestCase):
@@ -167,7 +153,7 @@ class Test_results_parser(unittest.TestCase):
         return super().setUp()
 
     def test_valid_params(self):
-        response = gen.results_parser(example_response)
+        response = gen.results_parser(deepcopy(example_response))
         self.assertIsNotNone(response.get("items"))
 
         self.assertIsNone(response.get("kind"))
@@ -177,59 +163,51 @@ class Test_results_parser(unittest.TestCase):
                 self.assertIn(key, response.get("items")[0])
                 self.assertIsNotNone(response.get("items")[0].get(key))
 
-    # it should check if results have items key
-    # def test_empty_results_param(self):
-    #     self.assertRaises(KeyError, gen.results_parser({}))
+    def test_empty_results_param(self):
+        self.assertRaises(KeyError, gen.results_parser({}))
 
 
 class Test_add_video_details(unittest.TestCase):
     def setUp(self) -> None:
-        self.ok_parsed_example = deepcopy(parsed_example)
-        self.nok_parsed_example = deepcopy(parsed_example)
+        self.ok_parsed_example = gen.results_parser(deepcopy(example_response))
+        self.nok_parsed_example = gen.results_parser(deepcopy(example_response))
         return super().setUp()
 
     def test_valid_video_list(self):
-        gen.add_video_details(self.ok_parsed_example)
-        video = self.ok_parsed_example[0]
+        gen.add_video_details(self.ok_parsed_example.get("items"))
+        video = self.ok_parsed_example.get("items")[0]
         self.assertIsNotNone(video.get("duration"))
         self.assertIsNotNone(video.get("defaultAudioLanguage"))
 
-    # it should check if videoId key exists
-    # def test_invalid_video_list(self):
-    #     self.nok_parsed_example[0].pop("videoId")
-    #     gen.add_video_details(self.nok_parsed_example)
-    #     video = self.nok_parsed_example[0]
-    #     self.assertIsNone(video.get("duration"))
-    #     self.assertIsNone(video.get("defaultAudioLanguage"))
+    def test_invalid_video_list(self):
+        self.nok_parsed_example.pop("videoId")
+        self.assertRaises(ValueError, gen.add_video_details(self.nok_parsed_example.get("items")))
 
 
 class Test_add_transcripts_info(unittest.TestCase):
     def setUp(self) -> None:
-        self.ok_parsed_example = deepcopy(parsed_example)
-        self.nok1_parsed_example = deepcopy(parsed_example)
-        self.nok2_parsed_example = deepcopy(parsed_example)
+        self.ok_parsed_example = gen.results_parser(deepcopy(example_response))
+        self.nok1_parsed_example = gen.results_parser(deepcopy(example_response))
+        self.nok2_parsed_example = gen.results_parser(deepcopy(example_response))
+        print(self.nok2_parsed_example)
         return super().setUp()
 
     def test_valid_video_list(self):
-        gen.add_transcripts_info(self.ok_parsed_example)
-        video = self.ok_parsed_example[0]
+        gen.add_transcripts_info(self.ok_parsed_example.get("items"))
+        video = self.ok_parsed_example.get("items")[0]
         self.assertIsNotNone(video.get("manuallyCreatedTranscripts"))
         self.assertIsNotNone(video.get("generatedTranscripts"))
 
     def test_invalid_video_list(self):
-        self.nok2_parsed_example[0].pop("title")
-        gen.add_transcripts_info(self.nok2_parsed_example)
-        video = self.nok2_parsed_example[0]
+        self.nok2_parsed_example.get("items")[0].pop("title")
+        gen.add_transcripts_info(self.nok2_parsed_example.get("items"))
+        video = self.nok2_parsed_example.get("items")[0]
         self.assertIsNotNone(video.get("manuallyCreatedTranscripts"))
         self.assertIsNotNone(video.get("generatedTranscripts"))
 
-    # it should check if videoId key exists
-    # def test_lack_of_videoid(self):
-    #     self.nok1_parsed_example[0].pop("videoId")
-    #     gen.add_transcripts_info(self.nok1_parsed_example)
-    #     video = self.nok1_parsed_example[0]
-    #     self.assertIsNone(video.get("manuallyCreatedTranscripts"))
-    #     self.assertIsNone(video.get("generatedTranscripts"))
+    def test_lack_of_videoid(self):
+        self.nok1_parsed_example.get("items")[0].pop("videoId")
+        self.assertRaises(KeyError, gen.add_transcripts_info(self.nok1_parsed_example.get("items")))
 
 
 class Test_save_as_json(unittest.TestCase):
@@ -280,15 +258,13 @@ class Test_generate(unittest.TestCase):
         print(parsed_results)
         self.assertIsNotNone(parsed_results["items"][0]["generatedTranscripts"])
 
-    # it should return user friendly error (not return KeyError and stop program)
-    # def test_invalid_args(self):
-    #     args = deepcopy(search_request.get("args")).pop("maxResults")
-    #     self.assertRaises(KeyError, gen.generate(args))
-    #     or
-    #     self.assertRaises(AttributeError, gen.generate(args))
+    def test_invalid_args(self):
+        args = deepcopy(search_request.get("args")).pop("maxResults")
+        self.assertRaises(KeyError, gen.generate(args))
+        self.assertRaises(AttributeError, gen.generate(args))
 
-    # def test_empty_args(self):
-    #     self.assertRaises(KeyError, gen.generate({}))
+    def test_empty_args(self):
+        self.assertRaises(KeyError, gen.generate({}))
 
 
 # class TestSearchRequest(unittest.TestCase):
