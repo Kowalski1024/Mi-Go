@@ -9,6 +9,7 @@ from pathlib import Path
 import googleapiclient.discovery
 from loguru import logger
 from youtube_transcript_api import YouTubeTranscriptApi
+from youtube_transcript_api._errors import TranscriptsDisabled
 
 os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 api_key = os.environ.get("GoogleAPI")
@@ -78,10 +79,7 @@ def assignable_categories(hl: str, region_code: str) -> dict[int, str]:
 
 
 def search_request(
-    args: dict,
-    part: str = "snippet",
-    video_type: str = "video",
-    caption: str = "closedCaption",
+    args: dict, part: str = "snippet", video_type: str = "video", caption: str = "closedCaption",
 ) -> dict:
     """
     Request search from youtube api
@@ -99,12 +97,7 @@ def search_request(
     logger.info(
         f"Request search with args: part={part}, type={video_type}, videoCaption={caption} and {args}"
     )
-    request = youtube_api.search().list(
-        **args,
-        part=part,
-        type=video_type,
-        videoCaption=caption,
-    )
+    request = youtube_api.search().list(**args, part=part, type=video_type, videoCaption=caption,)
     response = request.execute()
     response["videoCategoryId"] = args["videoCategoryId"]
 
@@ -183,7 +176,14 @@ def add_transcripts_info(items: list) -> None:
     logger.info("Adding transcript info")
     for video in items:
         video_id = video["videoId"]
-        transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
+
+        try:
+            transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
+        except TranscriptsDisabled as e:
+            logger.warning(f"Transcripts are disabled for video {video_id}: {e}")
+            video["manuallyCreatedTranscripts"] = []
+            video["generatedTranscripts"] = []
+
         video["manuallyCreatedTranscripts"] = list(
             transcripts._manually_created_transcripts.keys()
         )
@@ -257,17 +257,10 @@ def command_parser() -> tuple[argparse.Namespace, list[str]]:
         help="Video category id, see categories.py",
     )
     parser.add_argument(
-        "-t",
-        "--topicId",
-        required=False,
-        type=str,
+        "-t", "--topicId", required=False, type=str,
     )
     parser.add_argument(
-        "-r",
-        "--regionCode",
-        required=False,
-        type=str,
-        default="US",
+        "-r", "--regionCode", required=False, type=str, default="US",
     )
     parser.add_argument(
         "-d",
@@ -287,10 +280,7 @@ def command_parser() -> tuple[argparse.Namespace, list[str]]:
     )
     parser.add_argument("-q", "--queryTerm", required=False, type=str, dest="q")
     parser.add_argument(
-        "-pt",
-        "--pageToken",
-        required=False,
-        type=str,
+        "-pt", "--pageToken", required=False, type=str,
     )
     return parser.parse_known_args()
 

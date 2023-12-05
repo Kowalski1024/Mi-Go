@@ -18,7 +18,7 @@ class WhisperTest(TranscriptTest):
     def __init__(self, model_name: str, language: str = None, gpu: int = 0, **kwargs):
         super().__init__(model_name, language, **kwargs)
         self.model_name = model_name
-        self.model_language = language
+        self.language = language
         self.model = whisper.load_model(model_name, device=torch.device(f"cuda:{gpu}"))
 
         self.normalizer = EnglishTextNormalizer()
@@ -37,9 +37,8 @@ class WhisperTest(TranscriptTest):
         """
 
         results = self.transcriber(
-            audio=str(audio_path), verbose=False, language=self.model_language, fp16=False
+            audio=str(audio_path), verbose=False, language=self.language, fp16=False
         )
-        self.language = results["language"]
 
         return results["text"]
 
@@ -72,25 +71,8 @@ class WhisperTest(TranscriptTest):
             subparser: parser to add arguments to
         """
 
-        model_types = [
-            "tiny",
-            "base",
-            "small",
-            "medium",
-            "large",
-            "tiny.en",
-            "base.en",
-            "small.en",
-            "medium.en",
-        ]
-
         subparser.add_argument(
-            "-m",
-            "--model-type",
-            type=str,
-            dest="model_name",
-            choices=model_types,
-            required=True,
+            "-m", "--model-type", type=str, dest="model_name", required=True,
         )
 
         gpus = torch.cuda.device_count()

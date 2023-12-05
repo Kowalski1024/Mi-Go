@@ -43,10 +43,12 @@ class YouTubeTestRunner(TestRunner):
         self._save_transcripts = save_transcripts
         self._save_to_database = save_to_database
         self._keep_audio = keep_audio
+        self._session = None
 
-        engine = db.create_engine(f"sqlite:///youtube.sqlite")
-        YouTubeBase.metadata.create_all(engine)
-        self._session = sessionmaker(bind=engine)()
+        if self._save_to_database:
+            engine = db.create_engine(f"sqlite:///youtube.sqlite")
+            YouTubeBase.metadata.create_all(engine)
+            self._session = sessionmaker(bind=engine)()
 
     def run(self) -> None:
         if self.tester.transcriber is None:
@@ -196,11 +198,7 @@ class YouTubeTestRunner(TestRunner):
         )
 
         parser.add_argument(
-            "--audio-path",
-            required=False,
-            type=str,
-            default="./cache/audio",
-            dest="audio_dir",
+            "--audio-path", required=False, type=str, default="./cache/audio", dest="audio_dir",
         )
 
         parser.add_argument(

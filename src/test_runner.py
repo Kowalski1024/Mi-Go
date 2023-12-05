@@ -82,7 +82,7 @@ class TestRunner:
         logger.info(f"Chosen tester name: {tester.__name__}")
 
         obj = cls(**vars(args), tester=tester(**vars(args)))
-        logger.add(f"logs/{repr(obj)}_{time.strftime('%Y%m%d-%H%M%S')}.log")
+        logger.add(f"output/logs/{repr(obj)}_{time.strftime('%Y%m%d-%H%M%S')}.log")
         return obj
 
     @classmethod
