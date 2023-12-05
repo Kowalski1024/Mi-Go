@@ -107,7 +107,10 @@ def search_request(
         f"Request search with args: part={part}, type={video_type}, videoCaption={caption} and {args}"
     )
     request = youtube_api.search().list(
-        **args, part=part, type=video_type, videoCaption=caption,
+        **args,
+        part=part,
+        type=video_type,
+        videoCaption=caption,
     )
     response = request.execute()
     response["videoCategoryId"] = args["videoCategoryId"]
@@ -241,7 +244,8 @@ def command_parser() -> tuple[argparse.Namespace, list[str]]:
     """
 
     parser = argparse.ArgumentParser(
-        prog="Testplan generator", description="Generating json files used as testplan",
+        prog="Testplan generator",
+        description="Generating json files used as testplan",
     )
     parser.add_argument("maxResults", type=int)
     parser.add_argument(
@@ -268,10 +272,17 @@ def command_parser() -> tuple[argparse.Namespace, list[str]]:
         help="Video category id, see categories.py",
     )
     parser.add_argument(
-        "-t", "--topicId", required=False, type=str,
+        "-t",
+        "--topicId",
+        required=False,
+        type=str,
     )
     parser.add_argument(
-        "-r", "--regionCode", required=False, type=str, default="US",
+        "-r",
+        "--regionCode",
+        required=False,
+        type=str,
+        default="US",
     )
     parser.add_argument(
         "-d",
@@ -291,7 +302,10 @@ def command_parser() -> tuple[argparse.Namespace, list[str]]:
     )
     parser.add_argument("-q", "--queryTerm", required=False, type=str, dest="q")
     parser.add_argument(
-        "-pt", "--pageToken", required=False, type=str,
+        "-pt",
+        "--pageToken",
+        required=False,
+        type=str,
     )
     return parser.parse_known_args()
 
@@ -343,7 +357,9 @@ def main():
     search_results = generate(api_args)
 
     save_as_json(
-        results=search_results, destination=dest, category=categories[category_id],
+        results=search_results,
+        destination=dest,
+        category=categories[category_id],
     )
 
 

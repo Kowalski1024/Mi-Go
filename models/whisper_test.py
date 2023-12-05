@@ -37,7 +37,10 @@ class WhisperTest(TranscriptTest):
         """
 
         results = self.transcriber(
-            audio=str(audio_path), verbose=False, language=self.language, fp16=False,
+            audio=str(audio_path),
+            verbose=False,
+            language=self.language,
+            fp16=False,
         )
 
         return results["text"]
@@ -72,7 +75,11 @@ class WhisperTest(TranscriptTest):
         """
 
         subparser.add_argument(
-            "-m", "--model-type", type=str, dest="model_name", required=True,
+            "-m",
+            "--model-type",
+            type=str,
+            dest="model_name",
+            required=True,
         )
 
         gpus = torch.cuda.device_count()

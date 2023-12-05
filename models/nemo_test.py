@@ -90,7 +90,11 @@ class NemoTest(TranscriptTest):
         """
 
         subparser.add_argument(
-            "-m", "--model-type", type=str, dest="model_name", required=True,
+            "-m",
+            "--model-type",
+            type=str,
+            dest="model_name",
+            required=True,
         )
 
         subparser.add_argument(
