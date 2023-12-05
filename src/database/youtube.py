@@ -34,7 +34,9 @@ class YouTubeTestPlan(YouTubeBase):
     mean = Column(Float)
 
     @classmethod
-    def from_testplan(cls, testplan_name: str, testplan: Mapping[str, Any]) -> "YouTubeTestPlan":
+    def from_testplan(
+        cls, testplan_name: str, testplan: Mapping[str, Any]
+    ) -> "YouTubeTestPlan":
         args = testplan["args"]
         success = [items for items in testplan["items"] if "results" in items]
 

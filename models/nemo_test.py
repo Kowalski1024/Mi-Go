@@ -15,7 +15,12 @@ class NemoTest(TranscriptTest):
     """
 
     def __init__(
-        self, model_name: str, model_class: str, language: str = None, gpu: int = 0, **kwargs
+        self,
+        model_name: str,
+        model_class: str,
+        language: str = None,
+        gpu: int = 0,
+        **kwargs,
     ):
         super().__init__(model_name, language, **kwargs)
         self.model_name = model_name
@@ -88,7 +93,9 @@ class NemoTest(TranscriptTest):
             "-m", "--model-type", type=str, dest="model_name", required=True,
         )
 
-        subparser.add_argument("-c", "--model-class", type=str, dest="model_class", required=True)
+        subparser.add_argument(
+            "-c", "--model-class", type=str, dest="model_class", required=True
+        )
 
         subparser.add_argument(
             "-l",

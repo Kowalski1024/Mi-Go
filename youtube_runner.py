@@ -158,7 +158,9 @@ class YouTubeTestRunner(TestRunner):
         with open(path, "x", encoding="utf-8") as f:
             json.dump(results, f, ensure_ascii=False)
 
-        if self._save_to_database and not insert_youtube_result(self._session, filename, results):
+        if self._save_to_database and not insert_youtube_result(
+            self._session, filename, results
+        ):
             logger.warning(f"Failed to save results to database")
 
     def __repr__(self):
@@ -198,7 +200,11 @@ class YouTubeTestRunner(TestRunner):
         )
 
         parser.add_argument(
-            "--audio-path", required=False, type=str, default="./cache/audio", dest="audio_dir",
+            "--audio-path",
+            required=False,
+            type=str,
+            default="./cache/audio",
+            dest="audio_dir",
         )
 
         parser.add_argument(

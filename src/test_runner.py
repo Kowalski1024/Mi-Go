@@ -78,7 +78,9 @@ class TestRunner:
         logger.info(f"Command line args:\n{pprint.pformat(vars(args))}")
 
         # Get the tester class from the registry
-        tester = [x for x in TestRegistry.get_registry(cls) if x.__name__ == args.test_class][0]
+        tester = [
+            x for x in TestRegistry.get_registry(cls) if x.__name__ == args.test_class
+        ][0]
         logger.info(f"Chosen tester name: {tester.__name__}")
 
         obj = cls(**vars(args), tester=tester(**vars(args)))
@@ -96,7 +98,9 @@ class TestRunner:
 
         if registry := TestRegistry.get_registry(cls):
             subparsers = parser.add_subparsers(
-                required=True, help="Select the test you want to run", dest="test_class"
+                required=True,
+                help="Select the test you want to run",
+                dest="test_class",
             )
 
             # Add the subparsers for each test

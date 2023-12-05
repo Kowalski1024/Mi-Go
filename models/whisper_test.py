@@ -37,7 +37,7 @@ class WhisperTest(TranscriptTest):
         """
 
         results = self.transcriber(
-            audio=str(audio_path), verbose=False, language=self.language, fp16=False
+            audio=str(audio_path), verbose=False, language=self.language, fp16=False,
         )
 
         return results["text"]

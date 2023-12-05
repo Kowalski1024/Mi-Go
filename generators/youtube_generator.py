@@ -19,7 +19,9 @@ api_service_name = "youtube"
 api_version = "v3"
 
 # Initialize the Youtube API
-youtube_api = googleapiclient.discovery.build(api_service_name, api_version, developerKey=api_key)
+youtube_api = googleapiclient.discovery.build(
+    api_service_name, api_version, developerKey=api_key
+)
 
 
 def videos_details_request(videos: list) -> dict:
@@ -34,7 +36,9 @@ def videos_details_request(videos: list) -> dict:
     """
 
     logger.info("Request videos details")
-    request = youtube_api.videos().list(part="contentDetails,snippet", id=",".join(videos))
+    request = youtube_api.videos().list(
+        part="contentDetails,snippet", id=",".join(videos)
+    )
 
     return request.execute()
 
@@ -53,7 +57,9 @@ def categories_request(hl: str, region_code: str) -> dict:
     """
 
     logger.info("Request categories")
-    request = youtube_api.videoCategories().list(part="snippet", hl=hl, regionCode=region_code)
+    request = youtube_api.videoCategories().list(
+        part="snippet", hl=hl, regionCode=region_code
+    )
 
     return request.execute()
 
@@ -79,7 +85,10 @@ def assignable_categories(hl: str, region_code: str) -> dict[int, str]:
 
 
 def search_request(
-    args: dict, part: str = "snippet", video_type: str = "video", caption: str = "closedCaption",
+    args: dict,
+    part: str = "snippet",
+    video_type: str = "video",
+    caption: str = "closedCaption",
 ) -> dict:
     """
     Request search from youtube api
@@ -97,7 +106,9 @@ def search_request(
     logger.info(
         f"Request search with args: part={part}, type={video_type}, videoCaption={caption} and {args}"
     )
-    request = youtube_api.search().list(**args, part=part, type=video_type, videoCaption=caption,)
+    request = youtube_api.search().list(
+        **args, part=part, type=video_type, videoCaption=caption,
+    )
     response = request.execute()
     response["videoCategoryId"] = args["videoCategoryId"]
 
@@ -230,7 +241,7 @@ def command_parser() -> tuple[argparse.Namespace, list[str]]:
     """
 
     parser = argparse.ArgumentParser(
-        prog="Testplan generator", description="Generating json files used as testplan"
+        prog="Testplan generator", description="Generating json files used as testplan",
     )
     parser.add_argument("maxResults", type=int)
     parser.add_argument(
@@ -314,7 +325,9 @@ def main():
 
     api_args = vars(args)
     dest = api_args.pop("outputDirectory")
-    categories = assignable_categories(hl=args.relevanceLanguage, region_code=args.regionCode)
+    categories = assignable_categories(
+        hl=args.relevanceLanguage, region_code=args.regionCode
+    )
     category_id = int(args.videoCategoryId)
 
     # check if category id is assignable
@@ -329,7 +342,9 @@ def main():
 
     search_results = generate(api_args)
 
-    save_as_json(results=search_results, destination=dest, category=categories[category_id])
+    save_as_json(
+        results=search_results, destination=dest, category=categories[category_id],
+    )
 
 
 if __name__ == "__main__":
