@@ -140,8 +140,11 @@ class Test_search_request(unittest.TestCase):
         self.assertIsInstance(response, dict)
         self.assertTrue(len(response) > 0)
         self.assertTrue("videoCategoryId" in response.keys())
-        self.assertEqual(response.get("videoCategoryId"), search_request.get("args").get("videoCategoryId"))
-         
+        self.assertEqual(
+            response.get("videoCategoryId"),
+            search_request.get("args").get("videoCategoryId"),
+        )
+
 
 class Test_results_parser(unittest.TestCase):
     def setUp(self) -> None:
@@ -185,7 +188,9 @@ class Test_add_video_details(unittest.TestCase):
 
     def test_invalid_video_list(self):
         self.nok_parsed_example.pop("videoId")
-        self.assertRaises(ValueError, gen.add_video_details(self.nok_parsed_example.get("items")))
+        self.assertRaises(
+            ValueError, gen.add_video_details(self.nok_parsed_example.get("items"))
+        )
 
 
 class Test_add_transcripts_info(unittest.TestCase):
@@ -212,7 +217,9 @@ class Test_add_transcripts_info(unittest.TestCase):
 
     def test_lack_of_videoid(self):
         self.nok1_parsed_example.get("items")[0].pop("videoId")
-        self.assertRaises(KeyError, gen.add_transcripts_info(self.nok1_parsed_example.get("items")))
+        self.assertRaises(
+            KeyError, gen.add_transcripts_info(self.nok1_parsed_example.get("items"))
+        )
 
 
 class Test_save_as_json(unittest.TestCase):
@@ -243,16 +250,18 @@ class Test_save_as_json(unittest.TestCase):
         )
         self.assertEqual(written_content, expected_content)
 
-    @patch('generators.youtube_generator.time')
-    @patch('builtins.open', new_callable=mock_open)
+    @patch("generators.youtube_generator.time")
+    @patch("builtins.open", new_callable=mock_open)
     def test_invalid_keys(self, mock_open, mock_time):
         category = "Test Category"
 
         mock_time.strftime.return_value = "20231126-000000"
         mock_open.return_value.write.return_value = len(results_example)
 
-        with patch('pathlib.Path.mkdir'):
-            self.assertRaises(KeyError, gen.save_as_json({}, "/path/to/destination", category))
+        with patch("pathlib.Path.mkdir"):
+            self.assertRaises(
+                KeyError, gen.save_as_json({}, "/path/to/destination", category)
+            )
 
 
 class Test_generate(unittest.TestCase):
