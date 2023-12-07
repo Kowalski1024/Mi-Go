@@ -22,29 +22,48 @@ class ModelClassValidator:
         return " ".join(fragment["text"] for fragment in srt)
 
 
-    def validate(self):
-        if not hasattr(self.model_instance, 'model'):
-            print("you must provide model")
-        if not hasattr(self.model_instance, 'transcriber'):
-            print("you must provide transcriber")
-        if not hasattr(self.model_instance, 'differ'):
-            print("you must provide differ")
-            
+    def check_attributes(self) -> dict:
+        expected_attributes = ["model", "transcriber", "differ"]
+        check_results_dict = {}
+        for e in expected_attributes:
+            if not hasattr(self.model_instance, e):
+                check_results_dict[e + "_field"] = "you must provide " + e + " field"
+
+        target_transcript = self.get_yt_transcript("QkkoHAzjnUs")
+        check_results_dict["target_transcript"] = target_transcript
+
         try:
             returned_transcript = self.model_instance.transcribe("apptests/sample.mp3")
-            
-        except NotImplementedError as e:
-            print("you must provide transcribe method")
-            return
-        
-        target_transcript = self.get_yt_transcript("QkkoHAzjnUs")
-        try:
-            self.model_instance.compare(returned_transcript, target_transcript) 
-        except Exception as e:
-            print("you must provide compare method")
-            print(type(e).__name__)
-            return
 
+            if (type(returned_transcript) is not str):
+                check_results_dict["transcribe_method"] = "transcribe method must return str"
+
+            check_results_dict["model_transciption"] = returned_transcript
+        except Exception as e:
+            check_results_dict["transcribe_method"] = type(e).__name__ + " occured"
+        
+        try:
+            differ_results = self.model_instance.compare(returned_transcript, target_transcript)
+
+            if (type(differ_results) is not dict):
+                check_results_dict["compare_method"] = "compare method must return dict"
+
+            check_results_dict["comparison_results"] = returned_transcript
+        except Exception as e:
+            check_results_dict["compare_method"] = type(e).__name__ + " occured"
+
+        return check_results_dict
+
+    def log_errors(self, errors_dict):
+        if errors_dict:
+            for key, value in errors_dict.items():
+                print(key + ":  " + value)
+        else:
+            print("Model class is ready to use")
+
+    def validate(self):
+        results = self.check_attributes()
+        self.log_errors(results)
 
 def command_parser() -> argparse.Namespace:
     """
