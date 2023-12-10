@@ -1,137 +1,102 @@
 import argparse
+import importlib.util
+import pprint
 
-import models
 from src.transcript_test import TranscriptTest
 
 
 class ModelClassValidator:
-    def __init__(self, model, language, model_type):
-        try:
-            if not isinstance(model, TranscriptTest):
-                raise TypeError("model must be instance of TranscriptTest class")
-            self.model_instance = model
-        except Exception as e:
-            print(type(e).__name__ + " occured: " + str(e))
-            exit(1)
+    def __init__(self, model: TranscriptTest):
+        if not isinstance(model, TranscriptTest):
+            raise TypeError("model must be instance of TranscriptTest class")
 
-        self.language = language
-        self.model_type = model_type
+        self.model_instance = model
 
-    def get_yt_transcript(self) -> str:
+    def check_attributes(self) -> dict:
+        expected_attributes = ["transcriber", "differ", "normalizer"]
+
+        for e in expected_attributes:
+            if (
+                not hasattr(self.model_instance, e)
+                or getattr(self.model_instance, e) is None
+            ):
+                raise AttributeError(f"model must have {e} attribute")
+
+    def run_transcribe(self) -> str:
+        returned_transcript = self.model_instance.transcribe("apptests/data/sample.mp3")
+
+        if type(returned_transcript) is not str:
+            raise TypeError("transcribe method must return str")
+
+        return returned_transcript
+
+    def run_compare(self, model_transcript: str, target_transcript: str) -> dict:
+        print(f"Target transcript:\n{target_transcript}\n")
+        print(f"Model transcript:\n{model_transcript}\n")
+
+        differ_results = self.model_instance.compare(
+            model_transcript, target_transcript
+        )
+
+        if type(differ_results) is not dict:
+            raise TypeError("compare method must return dict")
+
+        print("Differ results:")
+        pprint.pprint(differ_results)
+        print()
+
+        return differ_results
+
+    def run_additional_info(self) -> dict:
+        except_attributes = ["modelName", "language"]
+        additional_info = self.model_instance.additional_info()
+
+        if type(additional_info) is not dict:
+            raise TypeError("additional_info method must return dict")
+
+        for e in except_attributes:
+            if not e in additional_info:
+                raise AttributeError(f"additional_info must have {e} attribute")
+
+    def check_model(self) -> dict:
+        self.check_attributes()
+        model_transcript = self.run_transcribe()
+        target_transcript = self.get_yt_transcript()
+        self.run_compare(model_transcript, target_transcript)
+        self.run_additional_info()
+
+        print("Model is ready to use!")
+
+    @staticmethod
+    def get_yt_transcript() -> str:
         with open("data/transcript.txt", "r") as file:
             content = file.read()
             return content
 
-    def check_attributes(self, check_results) -> dict:
-        expected_attributes = ["model", "transcriber", "differ"]
-        for e in expected_attributes:
-            if not hasattr(self.model_instance, e):
-                check_results[e + "_field"] = "you must provide " + e + " field"
 
-    def run_transcribe(self, check_results) -> str:
-        target_transcript = self.get_yt_transcript()
-        check_results["target_transcript"] = target_transcript
-
-        try:
-            returned_transcript = self.model_instance.transcribe(
-                "apptests/data/sample.mp3"
-            )
-
-            if type(returned_transcript) is not str:
-                check_results["transcribe_method"] = "transcribe method must return str"
-
-            check_results["model_transciption"] = returned_transcript
-        except Exception as e:
-            check_results["transcribe_method"] = type(e).__name__ + " occured"
-
-    def run_compare(self, check_results) -> dict:
-        try:
-            differ_results = self.model_instance.compare(
-                check_results["model_transciption"], check_results["target_transcript"]
-            )
-
-            if type(differ_results) is not dict:
-                check_results["compare_method"] = "compare method must return dict"
-
-            check_results["comparison_results"] = differ_results
-        except Exception as e:
-            check_results["compare_method"] = type(e).__name__ + " occured"
-
-    def run_additional_info(self, check_results) -> dict:
-        try:
-            additional_info = self.model_instance.additional_info()
-
-            if type(additional_info) is not dict:
-                check_results[
-                    "additional_info_method"
-                ] = "additional_info method must return dict"
-
-            check_results["additional_info"] = additional_info
-        except Exception as e:
-            check_results["additional_info_method"] = type(e).__name__ + " occured"
-
-    def check_model(self) -> dict:
-        check_results_dict = {}
-        self.check_attributes(check_results_dict)
-        self.run_transcribe(check_results_dict)
-        self.run_compare(check_results_dict)
-        self.run_additional_info(check_results_dict)
-        return check_results_dict
-
-    def log_errors(self, errors_dict):
-        if errors_dict:
-            for key, value in errors_dict.items():
-                if type(value) is dict:
-                    print(key + ":")
-                    for k, v in value.items():
-                        print("    " + k + ":  " + v)
-                else:
-                    print(key + ":  " + value)
-        else:
-            print("Model class is ready to use")
-
-    def validate(self):
-        results = self.check_model()
-        self.log_errors(results)
-
-
-def command_parser() -> argparse.Namespace:
-    """
-    Parse command line arguments
-
-    Returns:
-        parsed arguments
-    """
-
+def main():
     parser = argparse.ArgumentParser(
         prog="Models class validator",
         description="Test if user model class is ready to use",
     )
-    parser.add_argument("-c", "--class-name", type=str, required=True)
-    parser.add_argument(
-        "-l",
-        "--relevance-language",
-        required=False,
-        type=str,
-        default="en",
-    )
-    parser.add_argument(
-        "-m",
-        "--model-type",
-        type=str,
-        required=True,
-    )
+    parser.add_argument(type=str, dest="module_name", help="Module name")
+    parser.add_argument(type=str, dest="class_name", help="Class name")
 
-    return parser.parse_args()
+    args, extra_args = parser.parse_known_args()
 
+    spec = importlib.util.spec_from_file_location("model.test", args.module_name)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    model_cls = getattr(module, args.class_name)
 
-def main():
-    args = vars(command_parser())
-    module_attrs = vars(models)
-    model_class = module_attrs.get(args["class_name"])
-    model = model_class()
-    mc = ModelClassValidator(model, args["relevance_language"], args["model_type"])
-    mc.validate()
+    model_parser = argparse.ArgumentParser()
+    model_cls.subparser(model_parser)
+    model_args = model_parser.parse_args(extra_args, namespace=args)
+
+    model = model_cls(**vars(model_args))
+
+    mc = ModelClassValidator(model)
+    mc.check_model()
 
 
 if __name__ == "__main__":
