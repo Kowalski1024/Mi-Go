@@ -121,7 +121,7 @@ class Test_categories_request(unittest.TestCase):
 class Test_assignable_categories(unittest.TestCase):
     def test_valid_params(self):
         response = gen.assignable_categories("en_US", "GB")
-        self.assertTrue(len(response) > 0)
+        self.assertTrue(len(response["items"]) > 0)
         self.assertIsInstance(response, dict)
 
     def test_invalid_params(self):
@@ -138,7 +138,7 @@ class Test_search_request(unittest.TestCase):
     def test_valid_params(self):
         response = gen.search_request(args=search_request.get("args"))
         self.assertIsInstance(response, dict)
-        self.assertTrue(len(response) > 0)
+        self.assertTrue(len(response["items"]) > 0)
         self.assertTrue("videoCategoryId" in response.keys())
         self.assertEqual(
             response.get("videoCategoryId"),
