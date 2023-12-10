@@ -3,68 +3,95 @@ import argparse
 from youtube_transcript_api import YouTubeTranscriptApi
 
 import models
+from src.transcript_test import TranscriptTest
 
 
 class ModelClassValidator:
-    def __init__(self, class_name, language, model_type):
-        module_attrs = vars(models)
-        model_class = module_attrs.get(class_name)
-        self.model_instance = model_class()
+    def __init__(self, model, language, model_type):
+        try:
+            if not isinstance(model, TranscriptTest):
+                raise TypeError("model must be instance of TranscriptTest class")
+            self.model_instance = model
+        except Exception as e:
+            print(type(e).__name__ + " occured: " + str(e))
+            exit(1)
+        
         self.language = language
         self.model_type = model_type
 
-    def get_yt_transcript(self, video_id: str) -> str:
-        transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
-
-        srt = transcripts.find_generated_transcript(language_codes=["en"]).fetch()
-
-        return " ".join(fragment["text"] for fragment in srt)
-
-    def check_attributes(self) -> dict:
+    def get_yt_transcript(self) -> str:
+        with open('data/transcript.txt', 'r') as file:
+            content = file.read()
+            return content
+        
+    def check_attributes(self, check_results) -> dict:
         expected_attributes = ["model", "transcriber", "differ"]
-        check_results_dict = {}
         for e in expected_attributes:
             if not hasattr(self.model_instance, e):
-                check_results_dict[e + "_field"] = "you must provide " + e + " field"
+                check_results[e + "_field"] = "you must provide " + e + " field"
 
-        target_transcript = self.get_yt_transcript("QkkoHAzjnUs")
-        check_results_dict["target_transcript"] = target_transcript
+    def run_transcribe(self, check_results) -> str:
+        target_transcript = self.get_yt_transcript()
+        check_results["target_transcript"] = target_transcript
 
         try:
-            returned_transcript = self.model_instance.transcribe("apptests/sample.mp3")
+            returned_transcript = self.model_instance.transcribe("apptests/data/sample.mp3")
 
             if type(returned_transcript) is not str:
-                check_results_dict[
+                check_results[
                     "transcribe_method"
                 ] = "transcribe method must return str"
 
-            check_results_dict["model_transciption"] = returned_transcript
+            check_results["model_transciption"] = returned_transcript
         except Exception as e:
-            check_results_dict["transcribe_method"] = type(e).__name__ + " occured"
+            check_results["transcribe_method"] = type(e).__name__ + " occured"
 
+    def run_compare(self, check_results) -> dict:
         try:
             differ_results = self.model_instance.compare(
-                returned_transcript, target_transcript
+                check_results["model_transciption"] , check_results["target_transcript"]
             )
 
             if type(differ_results) is not dict:
-                check_results_dict["compare_method"] = "compare method must return dict"
+                check_results["compare_method"] = "compare method must return dict"
 
-            check_results_dict["comparison_results"] = returned_transcript
+            check_results["comparison_results"] = differ_results
         except Exception as e:
-            check_results_dict["compare_method"] = type(e).__name__ + " occured"
+            check_results["compare_method"] = type(e).__name__ + " occured"
 
+    def run_additional_info(self, check_results) -> dict:
+        try:
+            additional_info = self.model_instance.additional_info()
+
+            if type(additional_info) is not dict:
+                check_results["additional_info_method"] = "additional_info method must return dict"
+
+            check_results["additional_info"] = additional_info
+        except Exception as e:
+            check_results["additional_info_method"] = type(e).__name__ + " occured"
+
+    def check_model(self) -> dict:
+        check_results_dict = {}
+        self.check_attributes(check_results_dict)
+        self.run_transcribe(check_results_dict)
+        self.run_compare(check_results_dict)
+        self.run_additional_info(check_results_dict)
         return check_results_dict
 
     def log_errors(self, errors_dict):
         if errors_dict:
             for key, value in errors_dict.items():
-                print(key + ":  " + value)
+                if type(value) is dict:
+                    print(key + ":")
+                    for k, v in value.items():
+                        print("    " + k + ":  " + v)
+                else:
+                    print(key + ":  " + value)
         else:
             print("Model class is ready to use")
 
     def validate(self):
-        results = self.check_attributes()
+        results = self.check_model()
         self.log_errors(results)
 
 
@@ -100,8 +127,11 @@ def command_parser() -> argparse.Namespace:
 
 def main():
     args = vars(command_parser())
+    module_attrs = vars(models)
+    model_class = module_attrs.get(args["class_name"])
+    model = model_class()
     mc = ModelClassValidator(
-        args["class_name"], args["relevance_language"], args["model_type"]
+        model, args["relevance_language"], args["model_type"]
     )
     mc.validate()
 
