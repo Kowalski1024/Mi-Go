@@ -1,7 +1,5 @@
 import argparse
 
-from youtube_transcript_api import YouTubeTranscriptApi
-
 import models
 from src.transcript_test import TranscriptTest
 
@@ -15,15 +13,15 @@ class ModelClassValidator:
         except Exception as e:
             print(type(e).__name__ + " occured: " + str(e))
             exit(1)
-        
+
         self.language = language
         self.model_type = model_type
 
     def get_yt_transcript(self) -> str:
-        with open('data/transcript.txt', 'r') as file:
+        with open("data/transcript.txt", "r") as file:
             content = file.read()
             return content
-        
+
     def check_attributes(self, check_results) -> dict:
         expected_attributes = ["model", "transcriber", "differ"]
         for e in expected_attributes:
@@ -35,12 +33,12 @@ class ModelClassValidator:
         check_results["target_transcript"] = target_transcript
 
         try:
-            returned_transcript = self.model_instance.transcribe("apptests/data/sample.mp3")
+            returned_transcript = self.model_instance.transcribe(
+                "apptests/data/sample.mp3"
+            )
 
             if type(returned_transcript) is not str:
-                check_results[
-                    "transcribe_method"
-                ] = "transcribe method must return str"
+                check_results["transcribe_method"] = "transcribe method must return str"
 
             check_results["model_transciption"] = returned_transcript
         except Exception as e:
@@ -49,7 +47,7 @@ class ModelClassValidator:
     def run_compare(self, check_results) -> dict:
         try:
             differ_results = self.model_instance.compare(
-                check_results["model_transciption"] , check_results["target_transcript"]
+                check_results["model_transciption"], check_results["target_transcript"]
             )
 
             if type(differ_results) is not dict:
@@ -64,7 +62,9 @@ class ModelClassValidator:
             additional_info = self.model_instance.additional_info()
 
             if type(additional_info) is not dict:
-                check_results["additional_info_method"] = "additional_info method must return dict"
+                check_results[
+                    "additional_info_method"
+                ] = "additional_info method must return dict"
 
             check_results["additional_info"] = additional_info
         except Exception as e:
@@ -130,9 +130,7 @@ def main():
     module_attrs = vars(models)
     model_class = module_attrs.get(args["class_name"])
     model = model_class()
-    mc = ModelClassValidator(
-        model, args["relevance_language"], args["model_type"]
-    )
+    mc = ModelClassValidator(model, args["relevance_language"], args["model_type"])
     mc.validate()
 
 
