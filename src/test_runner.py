@@ -50,7 +50,7 @@ class TestRunner:
     """
 
     def __init__(self, tester: TranscriptTest, **kwargs):
-        self.tester = tester
+        self.tester = tester 
 
     def run(self) -> None:
         """
