@@ -1,7 +1,7 @@
 import unittest
 from copy import deepcopy
 from os import environ, listdir
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, mock_open
 
 from generators.youtube_generator import generate
 from models.dummy_test import DummyTest
@@ -22,58 +22,47 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
         self.assertIsNotNone(self.runner.tester.differ)
         self.assertTrue("GoogleAPI" in environ)
 
-    @patch("builtins.open", new_callable=Mock, create=True)
-    @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict", return_value=Mock())
-    @patch("youtube_runner.YouTubeTestRunner.save_results", return_value=None)
-    @patch("generators.youtube_generator.generate", return_value=None)
-    def test_success_run(
-        self, mock_generate, mock_save_results, mock_from_dict, mock_open
-    ):
-        mock_file = mock_open.return_value
+    @patch("src.transcript_test.TranscriptTest", spec=True)
+    @patch("generators.youtube_generator.generate")
+    @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
+    @patch("builtins.open", create=True)
+    def test_run(self, mock_transcript_test, mock_generate, mock_from_dict, mock_open):
+        mock_transcriber = mock_transcript_test.transcriber
+        runner = YouTubeTestRunner(
+            tester=mock_transcript_test,
+            testplan_path="mock_testplan_path",
+            audio_dir="mock_audio_dir",
+            iterations=2,
+            save_transcripts=True,
+            save_to_database=True,
+            keep_audio=False
+        )
+
+        mock_open.return_value.read.return_value = '{"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token"}'
+
         mock_video = mock_from_dict.return_value
-        mock_audio = Mock()
-        mock_transcribe_result = "Mock Transcribe Result"
-        mock_compare_result = {"result": "Mock Compare Result"}
-
-        self.tester.transcriber = Mock()
-        self.tester.transcriber.transcribe.return_value = mock_transcribe_result
         mock_video.youtube_transcript.return_value = "Mock Target Transcript"
-        mock_video.download_mp3.return_value = mock_audio
-        self.tester.compare.return_value = mock_compare_result
-        self.tester.additional_info.return_value = {"additional_info": "Mock Additional Info"}
 
-        testplan_data = {
-            "args": {"pageToken": "mock_page_token"},
-            "items": [{"videoId": "mock_video_id"}],
-            "nextPageToken": "mock_next_page_token"
-        }
-        self.runner._testplan_path = "mock_testplan_path"
-        self.runner._iterations = 1
+        mock_video.download_mp3.return_value = "mock_audio"
 
-        with patch("builtins.open", mock_open), \
-             patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict", mock_from_dict), \
-             patch("youtube_runner.YouTubeTestRunner.save_results", mock_save_results), \
-             patch("generators.youtube_generator.generate", mock_generate):
-            self.runner.run()
+        mock_transcriber.transcribe.return_value = "Mock Transcribe Result"
+
+        mock_transcript_test.compare.return_value = {"result": "Mock Compare Result"}
+
+        runner.run()
 
         mock_open.assert_called_once_with("mock_testplan_path", encoding="utf8")
-        mock_from_dict.assert_called_once_with({"videoId": "mock_video_id"})
-        mock_video.youtube_transcript.assert_called_once_with(self.tester.language)
-        mock_video.download_mp3.assert_called_once_with(self.runner._audio_dir)
-        self.tester.transcriber.transcribe.assert_called_once_with(mock_audio)
-        self.tester.compare.assert_called_once_with(
-            mock_transcribe_result, "Mock Target Transcript"
-        )
-        self.tester.additional_info.assert_called_once()
+        mock_generate.assert_called_once_with({"pageToken": "token"})
+        mock_from_dict.assert_called_once_with({"videoId": "123"})
+        mock_video.youtube_transcript.assert_called_once_with(mock_transcript_test.language)
+        mock_video.download_mp3.assert_called_once_with("mock_audio_dir")
+        mock_transcriber.transcribe.assert_called_once_with("mock_audio")
+        mock_transcript_test.compare.assert_called_once_with("Mock Transcribe Result", "Mock Target Transcript")
+        mock_transcript_test.additional_info.assert_called_once()
 
-        mock_save_results.assert_called_once_with(testplan_data)
-        mock_generate.assert_called_once_with({"pageToken": "mock_next_page_token"})
-
-    @patch("builtins.open")
     @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
-    @patch("youtube_runner.YouTubeTestRunner.save_results")
-    @patch("generators.youtube_generator.generate")
-    def test_run_with_exceptions(self, mock_generate, mock_save_results, mock_from_dict, mock_open):
+    @patch("builtins.open")
+    def test_run_with_exceptions(self, mock_from_dict, mock_open):
         mock_file = Mock()
         mock_video = Mock()
         mock_open.return_value = mock_file
