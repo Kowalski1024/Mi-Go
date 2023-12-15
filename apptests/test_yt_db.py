@@ -54,7 +54,7 @@ class TestYouTubeModels(unittest.TestCase):
         self.assertEqual(result.page_token, "token")
         self.assertEqual(result.q, "test")
         self.assertEqual(result.total_results, 1)
-        self.assertEqual(result.success, 0) 
+        self.assertEqual(result.success, 0)
         self.assertEqual(result.etag, "abc123")
 
     def test_youtube_video(self):
