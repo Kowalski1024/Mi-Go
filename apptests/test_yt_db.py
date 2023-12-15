@@ -404,6 +404,38 @@ class TestInsertYouTubeResult(unittest.TestCase):
         self.assertEqual(result.wil, 1)
         self.assertEqual(result.wip, 1)
 
+    def test_insert_youtube_result_with_no_all_keys(self):
+        testplan_name = "test_plan"
+        testplan_data = {
+            "args": {
+                "maxResults": 10,
+                "pageToken": "token",
+                "q": "test",
+                "regionCode": "US",
+            },
+            "items": [
+                {
+                    "title": "1",
+                    "channelId": "1",
+                    "channelTitle": "1",
+                    "defaultAudioLanguage": "en",
+                    "videoId": "123",
+                    "results": {
+                        "modelName": "TestModel",
+                        "language": "en",
+                        "wer": 0.1,
+                    },
+                    "duration": "12",
+                    "publishTime": "2022-01-01T00:00:00Z",
+                }
+            ],
+            "nextPageToken": "token",
+            "etag": "abc123",
+        }
+        success = insert_youtube_result(self.session, testplan_name, testplan_data)
+        self.assertFalse(success)
+        # it should check if keys exist in db
+
     def test_insert_youtube_result_duplicate_testplan(self):
         testplan_name = "test_plan"
         testplan_data = {
