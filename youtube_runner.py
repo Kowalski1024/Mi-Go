@@ -30,6 +30,7 @@ class YouTubeTestRunner(TestRunner):
         self,
         testplan_path: PathLike,
         audio_dir: PathLike,
+        output_dir: PathLike,
         iterations: int = 1,
         save_transcripts: bool = False,
         save_to_database: bool = False,
@@ -39,6 +40,7 @@ class YouTubeTestRunner(TestRunner):
         super().__init__(**kwargs)
 
         self._audio_dir = Path(audio_dir)
+        self._output_dir = Path(output_dir)
         self._testplan_path = Path(testplan_path)
         self._iterations = iterations
         self._save_transcripts = save_transcripts
@@ -159,7 +161,7 @@ class YouTubeTestRunner(TestRunner):
         time_str = time.strftime("%Y%m%d-%H%M%S")
         filename = f"{results['args']['q']}_{self.__class__.__name__}_{time_str}.json"
 
-        path = Path(__file__).parent.joinpath("output", filename)
+        path = Path(__file__).parent.joinpath(self._audio_dir, filename)
         path.parent.mkdir(exist_ok=True)
 
         logger.info(f"Saving results - {path}")
@@ -226,6 +228,15 @@ class YouTubeTestRunner(TestRunner):
         )
 
         parser.add_argument("-it", "--iterations", required=False, type=int, default=1)
+
+        parser.add_argument(
+            "-o",
+            "--output",
+            required=False,
+            type=str,
+            default="./output",
+            dest="output_dir",
+        )
 
 
 if __name__ == "__main__":
