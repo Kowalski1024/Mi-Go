@@ -10,6 +10,7 @@ from typing import Any
 import sqlalchemy as db
 from loguru import logger
 from sqlalchemy.orm import sessionmaker
+from youtube_transcript_api._errors import TranscriptsDisabled
 
 from generators.youtube_generator import generate
 from models import DummyTest
@@ -87,6 +88,14 @@ class YouTubeTestRunner(TestRunner):
                         f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}"
                     )
                     video_details["error"] = f"ValueError (youtube transcript): {e}"
+                    continue
+                except TranscriptsDisabled as e:
+                    logger.warning(
+                        f"Skipping the video {video.videoId}, TranscriptsDisabled (youtube transcript): {e}"
+                    )
+                    video_details[
+                        "error"
+                    ] = f"TranscriptsDisabled (youtube transcript): {e}"
                     continue
 
                 # download the audio
