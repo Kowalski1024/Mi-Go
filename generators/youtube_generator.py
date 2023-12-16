@@ -197,6 +197,7 @@ def add_transcripts_info(items: list) -> None:
             logger.warning(f"Transcripts are disabled for video {video_id}: {e}")
             video["manuallyCreatedTranscripts"] = []
             video["generatedTranscripts"] = []
+            continue
 
         video["manuallyCreatedTranscripts"] = list(
             transcripts._manually_created_transcripts.keys()

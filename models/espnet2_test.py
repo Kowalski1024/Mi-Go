@@ -2,8 +2,10 @@ import argparse
 import os
 from pathlib import Path
 
-import nemo.collections.asr as nemo_asr
+import soundfile
 import torch
+from espnet2.bin.asr_inference import Speech2Text
+from espnet_model_zoo.downloader import ModelDownloader
 from pydub import AudioSegment
 from whisper.normalizers import EnglishTextNormalizer
 
@@ -11,42 +13,25 @@ from src.differs import jiwer_differ
 from src.transcript_test import TranscriptTest
 
 
-class NemoTest(TranscriptTest):
+class Espnet2Test(TranscriptTest):
     """
     Test to evaluate the difference between the model transcript and the target transcript
     """
 
-    def __init__(
-        self,
-        model_name: str,
-        model_class: str,
-        language: str = None,
-        gpu: int = 0,
-        **kwargs,
-    ):
+    def __init__(self, model_name: str, language: str, gpu: int = 0, **kwargs):
         super().__init__(model_name, language, **kwargs)
         self.model_name = model_name
-        self.model_class = model_class
         self.language = language
 
-        model_cls = nemo_asr.models
-        self.model = getattr(model_cls, model_class).from_pretrained(
-            model_name, map_location=torch.device(f"cuda:{gpu}")
+        downloader = ModelDownloader()
+        # "Shinji Watanabe/librispeech_asr_train_asr_transformer_e18_raw_bpe_sp_valid.acc.best"
+        self.model = Speech2Text(
+            **downloader.download_and_unpack(self.model_name), device=f"cuda:{gpu}"
         )
-        self.model.transcribe
-
-        self.model_settings = {"channel_selector": "average", "batch_size": 1}
 
         self.normalizer = EnglishTextNormalizer()
-        self.transcriber = self.model.transcribe
+        self.transcriber = self.model
         self.differ = jiwer_differ
-
-    def additional_info(self) -> dict:
-        return {
-            "modelName": f"{self.model_name} ({self.model_class})",
-            "language": self.language,
-            "modelSettings": str(self.model_settings),
-        }
 
     def transcribe(self, audio_path: Path) -> str:
         """
@@ -60,9 +45,11 @@ class NemoTest(TranscriptTest):
         """
         # Load audio file
         audio = AudioSegment.from_file(audio_path)
+        aduio = audio.set_channels(1)
+        audio = audio.set_frame_rate(16000)
 
         # Split audio into chunks to avoid memory issues
-        chunk_length_ms = 240 * 1000  # in milliseconds
+        chunk_length_ms = 10 * 1000  # in milliseconds
         chunks = [
             audio[i : i + chunk_length_ms]
             for i in range(0, len(audio), chunk_length_ms)
@@ -75,9 +62,14 @@ class NemoTest(TranscriptTest):
             chunk_path = f"{audio_path.stem}_chunk{i}.wav"
             chunk.export(chunk_path, format="wav")
 
+            # Load chunk
+            audio, _ = soundfile.read(chunk_path)
+
             # Transcribe chunk
-            results = self.transcriber([str(chunk_path)], **self.model_settings)
-            transcripts.append(results[0][0])
+            nbests = self.transcriber(audio)
+            results, *_ = nbests[0]
+
+            transcripts.append(results.lower())
 
             # remove temporary file
             os.remove(chunk_path)
@@ -104,7 +96,6 @@ class NemoTest(TranscriptTest):
 
         differ_results = jiwer_differ(normalized_model, normalized_target)
         differ_results["detectedLanguage"] = self.language
-        differ_results["model_name"] = self.model_name
 
         return differ_results
 
@@ -125,20 +116,6 @@ class NemoTest(TranscriptTest):
             required=True,
         )
 
-        subparser.add_argument(
-            "-c", "--model-class", type=str, dest="model_class", required=True
-        )
-
-        subparser.add_argument(
-            "-l",
-            "--language",
-            type=str,
-            dest="language",
-            default=None,
-            required=False,
-            help=f"Model language (default: None)",
-        )
-
         gpus = torch.cuda.device_count()
 
         subparser.add_argument(
@@ -149,4 +126,14 @@ class NemoTest(TranscriptTest):
             choices=range(gpus),
             default=0,
             help=f"GPU to use (default: 0, max: {gpus - 1})",
+        )
+
+        subparser.add_argument(
+            "-l",
+            "--language",
+            type=str,
+            dest="language",
+            default=None,
+            required=False,
+            help=f"Model language (default: None)",
         )

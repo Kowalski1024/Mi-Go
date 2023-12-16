@@ -1,17 +1,15 @@
 import argparse
-import os
 from pathlib import Path
 
-import nemo.collections.asr as nemo_asr
 import torch
-from pydub import AudioSegment
+from transformers.pipelines import pipeline
 from whisper.normalizers import EnglishTextNormalizer
 
 from src.differs import jiwer_differ
 from src.transcript_test import TranscriptTest
 
 
-class NemoTest(TranscriptTest):
+class HuggingfaceTest(TranscriptTest):
     """
     Test to evaluate the difference between the model transcript and the target transcript
     """
@@ -19,33 +17,48 @@ class NemoTest(TranscriptTest):
     def __init__(
         self,
         model_name: str,
-        model_class: str,
-        language: str = None,
+        language: str,
+        chunk_length_s: int,
+        stride_length_s: tuple[int, int] = (4, 2),
+        tokenizer: str = None,
+        feature_extractor: str = None,
+        decoder: str = None,
         gpu: int = 0,
         **kwargs,
     ):
         super().__init__(model_name, language, **kwargs)
         self.model_name = model_name
-        self.model_class = model_class
         self.language = language
+        self.chunk_length_s = chunk_length_s
+        self.stride_length_s = stride_length_s
+        self.tokenizer = tokenizer
+        self.feature_extractor = feature_extractor
+        self.decoder = decoder
 
-        model_cls = nemo_asr.models
-        self.model = getattr(model_cls, model_class).from_pretrained(
-            model_name, map_location=torch.device(f"cuda:{gpu}")
+        self.model = pipeline(
+            "automatic-speech-recognition",
+            model=model_name,
+            tokenizer=tokenizer,
+            feature_extractor=feature_extractor,
+            device=gpu,
         )
-        self.model.transcribe
-
-        self.model_settings = {"channel_selector": "average", "batch_size": 1}
-
+        self.transcriber = self.model
         self.normalizer = EnglishTextNormalizer()
-        self.transcriber = self.model.transcribe
         self.differ = jiwer_differ
 
     def additional_info(self) -> dict:
+        model_settings = {
+            "chunk_length_s": self.chunk_length_s,
+            "stride_length_s": self.stride_length_s,
+            "tokenizer": self.tokenizer,
+            "feature_extractor": self.feature_extractor,
+            "decoder": self.decoder,
+        }
+
         return {
-            "modelName": f"{self.model_name} ({self.model_class})",
+            "modelName": f"{self.model_name}",
             "language": self.language,
-            "modelSettings": str(self.model_settings),
+            "modelSettings": str(model_settings),
         }
 
     def transcribe(self, audio_path: Path) -> str:
@@ -58,34 +71,11 @@ class NemoTest(TranscriptTest):
         Returns:
             Transcript
         """
-        # Load audio file
-        audio = AudioSegment.from_file(audio_path)
-
-        # Split audio into chunks to avoid memory issues
-        chunk_length_ms = 240 * 1000  # in milliseconds
-        chunks = [
-            audio[i : i + chunk_length_ms]
-            for i in range(0, len(audio), chunk_length_ms)
-        ]
-
-        # Transcribe each chunk
-        transcripts = []
-        for i, chunk in enumerate(chunks):
-            # Save chunk to a temporary file
-            chunk_path = f"{audio_path.stem}_chunk{i}.wav"
-            chunk.export(chunk_path, format="wav")
-
-            # Transcribe chunk
-            results = self.transcriber([str(chunk_path)], **self.model_settings)
-            transcripts.append(results[0][0])
-
-            # remove temporary file
-            os.remove(chunk_path)
-
-        # Join transcripts
-        transcript = " ".join(transcripts)
-
-        return transcript
+        return self.model(
+            str(audio_path),
+            chunk_length_s=self.chunk_length_s,
+            stride_length_s=self.stride_length_s,
+        )["text"]
 
     def compare(self, model_transcript, target_transcript) -> dict:
         """
@@ -104,7 +94,6 @@ class NemoTest(TranscriptTest):
 
         differ_results = jiwer_differ(normalized_model, normalized_target)
         differ_results["detectedLanguage"] = self.language
-        differ_results["model_name"] = self.model_name
 
         return differ_results
 
@@ -126,10 +115,6 @@ class NemoTest(TranscriptTest):
         )
 
         subparser.add_argument(
-            "-c", "--model-class", type=str, dest="model_class", required=True
-        )
-
-        subparser.add_argument(
             "-l",
             "--language",
             type=str,
@@ -139,8 +124,51 @@ class NemoTest(TranscriptTest):
             help=f"Model language (default: None)",
         )
 
-        gpus = torch.cuda.device_count()
+        subparser.add_argument(
+            "-c",
+            "--chunk-length",
+            type=int,
+            dest="chunk_length_s",
+            required=True,
+            help=f"Chunk length in seconds",
+        )
 
+        subparser.add_argument(
+            "-s",
+            "--stride-length",
+            type=int,
+            nargs=2,
+            dest="stride_length_s",
+            default=(4, 2),
+            required=False,
+            help=f"Stride length in seconds (default: (4, 2))",
+        )
+
+        subparser.add_argument(
+            "--tokenizer",
+            type=str,
+            dest="tokenizer",
+            required=False,
+            help=f"Tokenizer file",
+        )
+
+        subparser.add_argument(
+            "--feature-extractor",
+            type=str,
+            dest="feature_extractor",
+            required=False,
+            help=f"Feature extractor file",
+        )
+
+        subparser.add_argument(
+            "--decoder",
+            type=str,
+            dest="decoder",
+            required=False,
+            help=f"Decoder file",
+        )
+
+        gpus = torch.cuda.device_count()
         subparser.add_argument(
             "-g",
             "--gpu",

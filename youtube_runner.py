@@ -10,6 +10,7 @@ from typing import Any
 import sqlalchemy as db
 from loguru import logger
 from sqlalchemy.orm import sessionmaker
+from youtube_transcript_api._errors import TranscriptsDisabled
 
 from generators.youtube_generator import generate
 from models import DummyTest
@@ -29,6 +30,7 @@ class YouTubeTestRunner(TestRunner):
         self,
         testplan_path: PathLike,
         audio_dir: PathLike,
+        output_dir: PathLike,
         iterations: int = 1,
         save_transcripts: bool = False,
         save_to_database: bool = False,
@@ -38,6 +40,7 @@ class YouTubeTestRunner(TestRunner):
         super().__init__(**kwargs)
 
         self._audio_dir = Path(audio_dir)
+        self._output_dir = Path(output_dir)
         self._testplan_path = Path(testplan_path)
         self._iterations = iterations
         self._save_transcripts = save_transcripts
@@ -87,6 +90,14 @@ class YouTubeTestRunner(TestRunner):
                         f"Skipping the video {video.videoId}, ValueError (youtube transcript): {e}"
                     )
                     video_details["error"] = f"ValueError (youtube transcript): {e}"
+                    continue
+                except TranscriptsDisabled as e:
+                    logger.warning(
+                        f"Skipping the video {video.videoId}, TranscriptsDisabled (youtube transcript): {e}"
+                    )
+                    video_details[
+                        "error"
+                    ] = f"TranscriptsDisabled (youtube transcript): {e}"
                     continue
 
                 # download the audio
@@ -150,7 +161,7 @@ class YouTubeTestRunner(TestRunner):
         time_str = time.strftime("%Y%m%d-%H%M%S")
         filename = f"{results['args']['q']}_{self.__class__.__name__}_{time_str}.json"
 
-        path = Path(__file__).parent.joinpath("output", filename)
+        path = Path(__file__).parent.joinpath(self._output_dir, filename)
         path.parent.mkdir(exist_ok=True)
 
         logger.info(f"Saving results - {path}")
@@ -217,6 +228,15 @@ class YouTubeTestRunner(TestRunner):
         )
 
         parser.add_argument("-it", "--iterations", required=False, type=int, default=1)
+
+        parser.add_argument(
+            "-o",
+            "--output",
+            required=False,
+            type=str,
+            default="./output",
+            dest="output_dir",
+        )
 
 
 if __name__ == "__main__":
