@@ -2,13 +2,14 @@ import argparse
 from pathlib import Path
 
 import torch
-from transformers.pipelines import AutomaticSpeechRecognitionPipeline
+from transformers.pipelines import pipeline
+from whisper.normalizers import EnglishTextNormalizer
 
 from src.differs import jiwer_differ
 from src.transcript_test import TranscriptTest
 
 
-class HugginfaceTest(TranscriptTest):
+class HuggingfaceTest(TranscriptTest):
     """
     Test to evaluate the difference between the model transcript and the target transcript
     """
@@ -19,7 +20,6 @@ class HugginfaceTest(TranscriptTest):
         language: str,
         chunk_length_s: int,
         stride_length_s: tuple[int, int] = (4, 2),
-        config: str = None,
         tokenizer: str = None,
         feature_extractor: str = None,
         decoder: str = None,
@@ -31,33 +31,32 @@ class HugginfaceTest(TranscriptTest):
         self.language = language
         self.chunk_length_s = chunk_length_s
         self.stride_length_s = stride_length_s
-        self.config = config
         self.tokenizer = tokenizer
         self.feature_extractor = feature_extractor
         self.decoder = decoder
 
-        self.model = AutomaticSpeechRecognitionPipeline(
+        self.model = pipeline(
+            "automatic-speech-recognition",
             model=model_name,
             tokenizer=tokenizer,
             feature_extractor=feature_extractor,
-            config=config,
             device=gpu,
         )
         self.transcriber = self.model
+        self.normalizer = EnglishTextNormalizer()
         self.differ = jiwer_differ
 
     def additional_info(self) -> dict:
         model_settings = {
             "chunk_length_s": self.chunk_length_s,
             "stride_length_s": self.stride_length_s,
-            "config": self.config,
             "tokenizer": self.tokenizer,
             "feature_extractor": self.feature_extractor,
             "decoder": self.decoder,
         }
 
         return {
-            "modelName": f"{self.model_name} ({self.model_class})",
+            "modelName": f"{self.model_name}",
             "language": self.language,
             "modelSettings": str(model_settings),
         }
@@ -73,9 +72,9 @@ class HugginfaceTest(TranscriptTest):
             Transcript
         """
         return self.model(
-            audio_path,
-            chunk_length=self.chunk_length_s,
-            stride_length=self.stride_length_s,
+            str(audio_path),
+            chunk_length_s=self.chunk_length_s,
+            stride_length_s=self.stride_length_s,
         )["text"]
 
     def compare(self, model_transcript, target_transcript) -> dict:
@@ -143,14 +142,6 @@ class HugginfaceTest(TranscriptTest):
             default=(4, 2),
             required=False,
             help=f"Stride length in seconds (default: (4, 2))",
-        )
-
-        subparser.add_argument(
-            "--config",
-            type=str,
-            dest="config",
-            required=False,
-            help=f"Config file",
         )
 
         subparser.add_argument(
