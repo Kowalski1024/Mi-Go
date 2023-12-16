@@ -161,7 +161,7 @@ class YouTubeTestRunner(TestRunner):
         time_str = time.strftime("%Y%m%d-%H%M%S")
         filename = f"{results['args']['q']}_{self.__class__.__name__}_{time_str}.json"
 
-        path = Path(__file__).parent.joinpath(self._audio_dir, filename)
+        path = Path(__file__).parent.joinpath(self._output_dir, filename)
         path.parent.mkdir(exist_ok=True)
 
         logger.info(f"Saving results - {path}")
