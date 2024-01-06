@@ -1,10 +1,10 @@
 import unittest
-from src.normalizers import title_normalizer
+
 from src.differs import jiwer_differ
+from src.normalizers import title_normalizer
 
 
 class TestTitleNormalizer(unittest.TestCase):
-
     def test_normalization_with_unicode_allowed(self):
         result = title_normalizer("Thérè ís sôme Ünicode", allow_unicode=True)
         self.assertEqual(result, "thérè-ís-sôme-ünicode")
@@ -37,6 +37,7 @@ class TestTitleNormalizer(unittest.TestCase):
         result = title_normalizer(None)
         self.assertEqual(result, None)
 
+
 class TestJiwerDiffer(unittest.TestCase):
     def test_with_detail(self):
         model_transcript = "This is a sample transcript."
@@ -52,7 +53,7 @@ class TestJiwerDiffer(unittest.TestCase):
         self.assertIn("del", result)
         self.assertIn("sub", result)
 
-        self.assertAlmostEqual(result["wer"], 0.2, places=2) 
+        self.assertAlmostEqual(result["wer"], 0.2, places=2)
         self.assertAlmostEqual(result["mer"], 0.25, places=2)
         self.assertAlmostEqual(result["wil"], 0.17, places=2)
 
@@ -62,7 +63,7 @@ class TestJiwerDiffer(unittest.TestCase):
 
         result_perfect = jiwer_differ(model_transcript_perfect, yt_transcript_perfect)
         self.assertIsInstance(result_perfect, dict)
-        self.assertEqual(result_perfect["wer"], 0.0)  
+        self.assertEqual(result_perfect["wer"], 0.0)
 
     def test_difference(self):
         model_transcript_diff = "This is a different transcript."
@@ -89,7 +90,5 @@ class TestJiwerDiffer(unittest.TestCase):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
-
-
