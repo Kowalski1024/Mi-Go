@@ -17,7 +17,6 @@ from models import DummyTest
 from src.database import YouTubeBase
 from src.dataclasses import YouTubeVideo
 from src.test_runner import TestRegistry, TestRunner
-from src.transcript_test import TranscriptTest
 from src.utils import insert_youtube_result
 
 
@@ -29,7 +28,6 @@ class YouTubeTestRunner(TestRunner):
 
     def __init__(
         self,
-        tester: TranscriptTest,
         testplan_path: PathLike,
         audio_dir: PathLike,
         output_dir: PathLike,
@@ -39,7 +37,7 @@ class YouTubeTestRunner(TestRunner):
         keep_audio: bool = False,
         **kwargs,
     ):
-        super().__init__(tester, **kwargs)
+        super().__init__(**kwargs)
 
         self._audio_dir = Path(audio_dir)
         self._output_dir = Path(output_dir)
