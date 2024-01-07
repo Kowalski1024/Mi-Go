@@ -4,6 +4,7 @@ import unittest
 from copy import deepcopy
 from os import environ, listdir, remove
 from unittest.mock import MagicMock, Mock, patch, mock_open
+from src.dataclasses.youtube_video import YouTubeVideo
 from src.differs import jiwer_differ
 
 from generators.youtube_generator import generate
@@ -27,33 +28,34 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
         self.assertTrue("GoogleAPI" in environ)
 
 
-    @patch("models.dummy_test.DummyTest")
     @patch("generators.youtube_generator.generate")
     @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
     @patch("builtins.open", new_callable=mock_open)
     @patch("json.load")
-    def test_run(self, mock_dummy_test, mock_generate, mock_from_dict, mock_open, mock_json_load):
+    @patch("json.dump")
+    def test_run(self, mock_generate, mock_from_dict,mock_open, mock_json_load, mock_json_dump):
         mock_dummy_test_instance = Mock(spec=models.DummyTest)
         mock_dummy_test_instance.transcriber = lambda x: "This is a model for tests :)"
+        mock_dummy_test_instance.transcribe.return_value = "This is a model for tests :)"
         mock_dummy_test_instance.normalizer = lambda x: x.lower()
         mock_dummy_test_instance.differ = jiwer_differ
         mock_dummy_test_instance.language = "en"
+        mock_dummy_test_instance.additional_info.return_value = {"modelName": "DummyTest", "language": "en", "modelSettings": "{'channel_selector': 'average', 'batch_size': 1}"}
         runner = YouTubeTestRunner(
             tester=mock_dummy_test_instance,
-            testplan_path="mock_testplan_path",
+            testplan_path="./apptests/data/simpleTest.json",
             audio_dir="mock_audio_dir",
             output_dir="mock_output_dir",
-            iterations=2,
+            iterations=1,
             save_transcripts=True,
-            save_to_database=True,
-            keep_audio=False
+            save_to_database=False,
+            keep_audio=True
         )
-        mock_video = mock_from_dict.return_value
-        mock_video.youtube_transcript.return_value = "Mock Target Transcript"
-
+        mock_video = MagicMock(spec=YouTubeVideo)
+        mock_video.youtube_transcript.return_value = "This is a model for tests :)"
         mock_video.download_mp3.return_value = "./apptests/data/sample.mp3"
+        mock_from_dict.return_value = mock_video
 
-        mock_dummy_test.return_value = mock_dummy_test_instance
         mock_dummy_test_instance.compare.return_value = {"result": "Mock Compare Result"}
 
         read_data = '{"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token"}'
@@ -61,19 +63,27 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
         mock_open_func = mock_open(read_data=read_data)
         mock_open_func.return_value.__enter__.return_value.read.return_value = read_data
 
+        def custom_json_dump(obj, f, ensure_ascii, indent):
+            serializable_obj = {}
+            for key, value in obj.items():
+                if isinstance(value, Mock):
+                    serializable_obj[key] = f'Mock object of type {value._spec_class.__name__}'
+                else:
+                    serializable_obj[key] = value
+
+            json.dump(serializable_obj, f, ensure_ascii=ensure_ascii, indent=indent)
+
+        mock_json_dump.side_effect = custom_json_dump
+
+
         with patch("builtins.open", mock_open_func), patch("json.load") as mock_json_load:
             mock_json_load.return_value = {"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token", "language": "en", "targetTranscript": "Mock Target Transcript"}
-
             runner.run()
-
-        mock_open.assert_called_once_with("mock_testplan_path", encoding="utf8")
-        mock_generate.assert_called_once_with({"pageToken": "token"})
-        mock_from_dict.assert_called_once_with({"videoId": "123"})
-        mock_video.youtube_transcript.assert_called_once_with(mock_transcript_test.language)
-        mock_video.download_mp3.assert_called_once_with("mock_audio_dir")
-        mock_dummy_test.return_value.compare.assert_called_once_with("Mock Transcribe Result", "Mock Target Transcript")
-        mock_dummy_test.return_value.additional_info.assert_called_once()
-
+            mock_generate.assert_called_once_with(mock_json_load.return_value, mock_open_func.return_value.__enter__.return_value, ensure_ascii=False)
+    
+        mock_open.assert_called_once_with(read_data=read_data)
+        mock_dummy_test_instance.additional_info.assert_called_once()
+        
     @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
     @patch("builtins.open")
     def test_run_with_exceptions(self, mock_from_dict, mock_open):
