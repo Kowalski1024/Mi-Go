@@ -3,13 +3,13 @@ import os
 import unittest
 from copy import deepcopy
 from os import environ, listdir, remove
-from unittest.mock import MagicMock, Mock, patch, mock_open
+from unittest.mock import MagicMock, Mock, mock_open, patch
+
+import models
+from generators.youtube_generator import generate
+from models.dummy_test import DummyTest
 from src.dataclasses.youtube_video import YouTubeVideo
 from src.differs import jiwer_differ
-
-from generators.youtube_generator import generate
-import models
-from models.dummy_test import DummyTest
 from youtube_runner import YouTubeTestRunner
 
 
@@ -17,7 +17,11 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
     def setUp(self) -> None:
         self.tester = Mock()
         self.runner = YouTubeTestRunner(
-            "Travel&Events_en_CAUQAQ_20231126-201522.json", "audio", "./output", iterations=1, tester=self.tester
+            "Travel&Events_en_CAUQAQ_20231126-201522.json",
+            "audio",
+            "./output",
+            iterations=1,
+            tester=self.tester,
         )
         return super().setUp()
 
@@ -27,20 +31,27 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
         self.assertIsNotNone(self.runner.tester.differ)
         self.assertTrue("GoogleAPI" in environ)
 
-
     @patch("generators.youtube_generator.generate")
     @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
     @patch("builtins.open", new_callable=mock_open)
     @patch("json.load")
     @patch("json.dump")
-    def test_run(self, mock_generate, mock_from_dict,mock_open, mock_json_load, mock_json_dump):
+    def test_run(
+        self, mock_generate, mock_from_dict, mock_open, mock_json_load, mock_json_dump
+    ):
         mock_dummy_test_instance = Mock(spec=models.DummyTest)
         mock_dummy_test_instance.transcriber = lambda x: "This is a model for tests :)"
-        mock_dummy_test_instance.transcribe.return_value = "This is a model for tests :)"
+        mock_dummy_test_instance.transcribe.return_value = (
+            "This is a model for tests :)"
+        )
         mock_dummy_test_instance.normalizer = lambda x: x.lower()
         mock_dummy_test_instance.differ = jiwer_differ
         mock_dummy_test_instance.language = "en"
-        mock_dummy_test_instance.additional_info.return_value = {"modelName": "DummyTest", "language": "en", "modelSettings": "{'channel_selector': 'average', 'batch_size': 1}"}
+        mock_dummy_test_instance.additional_info.return_value = {
+            "modelName": "DummyTest",
+            "language": "en",
+            "modelSettings": "{'channel_selector': 'average', 'batch_size': 1}",
+        }
         runner = YouTubeTestRunner(
             tester=mock_dummy_test_instance,
             testplan_path="./apptests/data/simpleTest.json",
@@ -49,14 +60,16 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
             iterations=1,
             save_transcripts=True,
             save_to_database=False,
-            keep_audio=True
+            keep_audio=True,
         )
         mock_video = MagicMock(spec=YouTubeVideo)
         mock_video.youtube_transcript.return_value = "This is a model for tests :)"
         mock_video.download_mp3.return_value = "./apptests/data/sample.mp3"
         mock_from_dict.return_value = mock_video
 
-        mock_dummy_test_instance.compare.return_value = {"result": "Mock Compare Result"}
+        mock_dummy_test_instance.compare.return_value = {
+            "result": "Mock Compare Result"
+        }
 
         read_data = '{"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token"}'
 
@@ -67,7 +80,9 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
             serializable_obj = {}
             for key, value in obj.items():
                 if isinstance(value, Mock):
-                    serializable_obj[key] = f'Mock object of type {value._spec_class.__name__}'
+                    serializable_obj[
+                        key
+                    ] = f"Mock object of type {value._spec_class.__name__}"
                 else:
                     serializable_obj[key] = value
 
@@ -75,15 +90,26 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
 
         mock_json_dump.side_effect = custom_json_dump
 
-
-        with patch("builtins.open", mock_open_func), patch("json.load") as mock_json_load:
-            mock_json_load.return_value = {"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token", "language": "en", "targetTranscript": "Mock Target Transcript"}
+        with patch("builtins.open", mock_open_func), patch(
+            "json.load"
+        ) as mock_json_load:
+            mock_json_load.return_value = {
+                "args": {"q": "test"},
+                "items": [{"videoId": "123"}],
+                "nextPageToken": "token",
+                "language": "en",
+                "targetTranscript": "Mock Target Transcript",
+            }
             runner.run()
-            mock_generate.assert_called_once_with(mock_json_load.return_value, mock_open_func.return_value.__enter__.return_value, ensure_ascii=False)
-    
+            mock_generate.assert_called_once_with(
+                mock_json_load.return_value,
+                mock_open_func.return_value.__enter__.return_value,
+                ensure_ascii=False,
+            )
+
         mock_open.assert_called_once_with(read_data=read_data)
         mock_dummy_test_instance.additional_info.assert_called_once()
-        
+
     @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
     @patch("builtins.open")
     def test_run_with_exceptions(self, mock_from_dict, mock_open):
@@ -99,10 +125,11 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
 
         self.runner._testplan_path = "mock_testplan_path"
 
-        with patch("builtins.open"), \
-            patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict"), \
-            patch("youtube_runner.YouTubeTestRunner.save_results"), \
-            patch("generators.youtube_generator.generate"):
+        with patch("builtins.open"), patch(
+            "src.dataclasses.youtube_video.YouTubeVideo.from_dict"
+        ), patch("youtube_runner.YouTubeTestRunner.save_results"), patch(
+            "generators.youtube_generator.generate"
+        ):
             with self.assertRaises(ValueError) as context:
                 self.runner.run()
 
@@ -175,7 +202,9 @@ testplan["items"] = [
 
 class Test_YoutubeTestRunner_save_results(unittest.TestCase):
     def setUp(self) -> None:
-        self.testrunner = YouTubeTestRunner("", "audio","./output", iterations=1, tester=Mock())
+        self.testrunner = YouTubeTestRunner(
+            "", "audio", "./output", iterations=1, tester=Mock()
+        )
         return super().setUp()
 
     # it didnt work - TypeError is raised when value is get from dict
@@ -188,7 +217,7 @@ class Test_YoutubeTestRunner_save_results(unittest.TestCase):
     # it didnt work - KeyError is raised when value is get from dict
     def test_empty_dict(self):
         self.assertRaises(KeyError, self.testrunner.save_results({}))
-        
+
         json_files = [file for file in listdir("apptests") if file.endswith(".json")]
         self.assertEqual(len(json_files), 2)
 
@@ -203,6 +232,3 @@ class Test_YoutubeTestRunner_save_results(unittest.TestCase):
 
         for json_file in json_files:
             remove(json_file)
-
-
-        
