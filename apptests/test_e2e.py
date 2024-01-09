@@ -6,10 +6,9 @@ import unittest
 
 
 class TestYoutubeGenerator(unittest.TestCase):
-
     def setUp(self):
         self.path = "apptests/data/simpleTest.json"
-        
+
     def test_directory_and_file_creation(self):
         command = (
             "python3 generators/youtube_generator.py 10 -o ./testplans -c 19 -l en"
@@ -49,9 +48,7 @@ class TestYoutubeGenerator(unittest.TestCase):
         )
 
     def test_testplan_execute_test_model(self):
-        command = (
-            f"python3 youtube_runner.py {self.path} -st DummyTest -m tiny"
-        )
+        command = f"python3 youtube_runner.py {self.path} -st DummyTest -m tiny"
         subprocess.run(command, shell=True)
         time_str = time.strftime("%Y%m%d-%H%M%S")
 
