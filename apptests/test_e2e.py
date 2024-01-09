@@ -6,6 +6,10 @@ import unittest
 
 
 class TestYoutubeGenerator(unittest.TestCase):
+
+    def setUp(self):
+        self.path = "apptests/data/simpleTest.json"
+        
     def test_directory_and_file_creation(self):
         command = (
             "python3 generators/youtube_generator.py 10 -o ./testplans -c 19 -l en"
@@ -46,18 +50,12 @@ class TestYoutubeGenerator(unittest.TestCase):
 
     def test_testplan_execute_test_model(self):
         command = (
-            "python3 generators/youtube_generator.py 10 -o ./testplans -c 19 -l en"
+            f"python3 youtube_runner.py {self.path} -st DummyTest -m tiny"
         )
         subprocess.run(command, shell=True)
         time_str = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"Travel&Events_en_CAUQAQ_{time_str}.json"
 
-        command = (
-            f"python3 youtube_runner.py './testplans/{filename}' -st DummyTest -m tiny"
-        )
-        subprocess.run(command, shell=True)
-
-        filename = f"YouTubeTestRunner_Travel&Events_{time_str}.json"
+        filename = f"Travel & Events_YouTubeTestRunner_{time_str}.json"
         output_directory = "./output"
         output_path = os.path.join(output_directory, filename)
         self.assertTrue(
@@ -72,17 +70,11 @@ class TestYoutubeGenerator(unittest.TestCase):
         self.assertEqual(output_data["testsRun"], 2, "Unexpected number of tests run.")
 
     def test_testplan_execute_proper_model(self):
-        command = (
-            "python3 generators/youtube_generator.py 10 -o ./testplans -c 19 -l en"
-        )
+        command = f"python3 youtube_runner.py {self.path} -st WhisperTest -m tiny"
         subprocess.run(command, shell=True)
         time_str = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"Travel&Events_en_CAUQAQ_{time_str}.json"
 
-        command = f"python3 youtube_runner.py './testplans/{filename}' -st WhisperTest -m tiny"
-        subprocess.run(command, shell=True)
-
-        filename = f"YouTubeTestRunner_Travel&Events_{time_str}.json"
+        filename = f"Travel & Events_YouTubeTestRunner_{time_str}.json"
         output_directory = "./output"
         output_path = os.path.join(output_directory, filename)
         self.assertTrue(
@@ -97,14 +89,11 @@ class TestYoutubeGenerator(unittest.TestCase):
         self.assertEqual(output_data["testsRun"], 2, "Unexpected number of tests run.")
 
     def test_execute_with_missing_parameter(self):
-        command = (
-            "python3 generators/youtube_generator.py 10 -o ./testplans -c 19 -l en"
-        )
+        command = f"python3 youtube_runner.py {self.path} -st WhisperTest -m tiny"
         subprocess.run(command, shell=True)
         time_str = time.strftime("%Y%m%d-%H%M%S")
-        filename = f"Travel&Events_en_CAUQAQ_{time_str}.json"
 
-        command = f"python3 youtube_runner.py ./testplans/{filename}"
+        command = f"python3 youtube_runner.py {self.path}"
         result = subprocess.run(
             command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
