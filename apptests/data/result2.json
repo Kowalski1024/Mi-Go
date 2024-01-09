@@ -1,0 +1,12 @@
+{
+    "modelName": "TestModel",
+    "language": "en",
+    "wer": 0.5,
+    "mer": 0.2,
+    "wil": 0.3,
+    "wip": 0.4,
+    "hits": 100,
+    "substitutions": 10,
+    "deletions": 5,
+    "insertions": 5
+}
