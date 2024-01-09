@@ -13,30 +13,30 @@ from src.database.youtube import (
 )
 from src.utils import insert_youtube_result
 
-path = 'apptests/data/'
+path = "apptests/data/"
 
-with open(f'{path}testplan1.json', 'r', encoding='utf-8') as file:
+with open(f"{path}testplan1.json", "r", encoding="utf-8") as file:
     testplan_data = json.load(file)
-    
-with open(f'{path}testplan2.json', 'r', encoding='utf-8') as file:
+
+with open(f"{path}testplan2.json", "r", encoding="utf-8") as file:
     testplan_data2 = json.load(file)
 
-with open(f'{path}testplan3.json', 'r', encoding='utf-8') as file:
+with open(f"{path}testplan3.json", "r", encoding="utf-8") as file:
     testplan_data3 = json.load(file)
 
-with open(f'{path}testplan4.json', 'r', encoding='utf-8') as file:
+with open(f"{path}testplan4.json", "r", encoding="utf-8") as file:
     testplan_data4 = json.load(file)
 
-with open(f'{path}testplan5.json', 'r', encoding='utf-8') as file:
+with open(f"{path}testplan5.json", "r", encoding="utf-8") as file:
     testplan_data5 = json.load(file)
 
-with open(f'{path}video.json', 'r', encoding='utf-8') as file:
+with open(f"{path}video.json", "r", encoding="utf-8") as file:
     video_data = json.load(file)
 
-with open(f'{path}result.json', 'r', encoding='utf-8') as file:
+with open(f"{path}result.json", "r", encoding="utf-8") as file:
     result_data = json.load(file)
 
-with open(f'{path}result2.json', 'r', encoding='utf-8') as file:
+with open(f"{path}result2.json", "r", encoding="utf-8") as file:
     result_data2 = json.load(file)
 
 
@@ -227,7 +227,7 @@ class TestInsertYouTubeResult(unittest.TestCase):
 
     def test_insert_youtube_result_with_no_all_keys(self):
         testplan_name = "test_plan"
-        
+
         success = insert_youtube_result(self.session, testplan_name, testplan_data5)
         self.assertFalse(success)
         # it should check if keys exist in db
