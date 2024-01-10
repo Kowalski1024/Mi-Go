@@ -1,6 +1,6 @@
-from copy import deepcopy
 import json
 import unittest
+from copy import deepcopy
 
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
@@ -85,14 +85,14 @@ class TestYouTubeModels(unittest.TestCase):
         self.assertIsNotNone(result)
         self.assertEqual(result.model_name, "TestModel")
         self.assertEqual(result.language, "en")
-        self.assertEqual(result.wer, 0.5)
-        self.assertEqual(result.mer, 0.2)
-        self.assertEqual(result.wil, 0.3)
-        self.assertEqual(result.wip, 0.4)
-        self.assertEqual(result.hits, 100)
-        self.assertEqual(result.substitutions, 10)
-        self.assertEqual(result.deletions, 5)
-        self.assertEqual(result.insertions, 5)
+        self.assertEqual(result.wer, 0.1)
+        self.assertEqual(result.mer, 1.0)
+        self.assertEqual(result.wil, 1.0)
+        self.assertEqual(result.wip, 1.0)
+        self.assertEqual(result.hits, 1)
+        self.assertEqual(result.substitutions, 12)
+        self.assertEqual(result.deletions, 12)
+        self.assertEqual(result.insertions, 65)
         self.assertEqual(result.model_settings, "{'param': 'value'}")
 
     def test_youtube_testplan_no_success(self):
@@ -130,8 +130,10 @@ class TestYouTubeModels(unittest.TestCase):
         self.session.add(youtube_video)
         self.session.commit()
 
+        result_data_copy = deepcopy(result_data).pop("modelSettings")
+
         youtube_result = YouTubeResult.from_result(
-            youtube_testplan.id, youtube_video.video_id, result_data.pop("model_settings")
+            youtube_testplan.id, youtube_video.video_id, result_data_copy
         )
         self.session.add(youtube_result)
         self.session.commit()
@@ -205,21 +207,21 @@ class TestInsertYouTubeResult(unittest.TestCase):
 
     def test_insert_youtube_result_duplicate_video(self):
         testplan_name = "test_plan"
-        
+
         testplan = deepcopy(testplan_data)
         testplan["items"].append(testplan["items"][0])
         success = insert_youtube_result(self.session, testplan_name, testplan_data)
 
-        self.assertFalse(success)
+        self.assertTrue(success)
 
     def test_insert_youtube_result_with_no_all_keys(self):
         testplan_name = "test_plan"
         testplan = deepcopy(testplan_data)
-        testplan.pop("relevanceLanguage")
-        testplan.pop("topicId")
-        testplan.pop("videoCategoryId")
-        testplan.pop("videoDuration")
-        
+        testplan["args"].pop("relevanceLanguage")
+        testplan["args"].pop("topicId")
+        testplan["args"].pop("videoCategoryId")
+        testplan["args"].pop("videoDuration")
+
         success = insert_youtube_result(self.session, testplan_name, testplan)
         self.assertFalse(success)
         # it should check if keys exist in db

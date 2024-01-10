@@ -1,9 +1,0 @@
-{
-    "videoId": "123",
-    "title": "Test Video",
-    "channelId": "channel123",
-    "channelTitle": "Test Channel",
-    "defaultAudioLanguage": "en",
-    "duration": "PT10M",
-    "publishTime": "2022-01-01T00:00:00Z"
-}
