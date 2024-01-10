@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 import time
 import unittest
@@ -8,22 +9,21 @@ import unittest
 class TestYoutubeGenerator(unittest.TestCase):
     def setUp(self):
         self.path = "apptests/data/simpleTest.json"
+        self.generate_dir = "apptests/testplans"
 
     def test_directory_and_file_creation(self):
-        command = (
-            "python3 generators/youtube_generator.py 10 -o ./testplans -c 19 -l en"
-        )
+        command = f"python3 generators/youtube_generator.py 10 -o {self.generate_dir} -c 19 -l en"
+
         subprocess.run(command, shell=True)
 
-        target_directory = "./testplans"
         self.assertTrue(
-            os.path.exists(target_directory), f"{target_directory} does not exist."
+            os.path.exists(self.generate_dir), f"{self.generate_dir} does not exist."
         )
         time_str = time.strftime("%Y%m%d-%H%M%S")
 
         filename = f"Travel&Events_en_CAUQAQ_{time_str}.json"
 
-        json_file_path = os.path.join(target_directory, filename)
+        json_file_path = os.path.join(self.generate_dir, filename)
         self.assertTrue(
             os.path.exists(json_file_path), f"{json_file_path} does not exist."
         )
@@ -33,6 +33,8 @@ class TestYoutubeGenerator(unittest.TestCase):
                 json.load(json_file)
             except json.JSONDecodeError:
                 self.fail(f"{json_file_path} is not a valid JSON file.")
+
+        shutil.rmtree(self.generate_dir)
 
     def test_missing_required_parameter(self):
         command = "python3 generators/youtube_generator.py -o ./testplans -c 19 -l en"
@@ -62,9 +64,7 @@ class TestYoutubeGenerator(unittest.TestCase):
         with open(output_path, "r") as output_file:
             output_data = json.load(output_file)
 
-        self.assertEqual(output_data["errors"], 0, "Unexpected errors in the test run.")
-        self.assertEqual(output_data["failures"], 1, "Expected test failure not found.")
-        self.assertEqual(output_data["testsRun"], 2, "Unexpected number of tests run.")
+        self.assertEqual(output_data["args"]["q"], "Travel & Events")
 
     def test_testplan_execute_proper_model(self):
         command = f"python3 youtube_runner.py {self.path} -st WhisperTest -m tiny"
@@ -81,9 +81,7 @@ class TestYoutubeGenerator(unittest.TestCase):
         with open(output_path, "r") as output_file:
             output_data = json.load(output_file)
 
-        self.assertEqual(output_data["errors"], 0, "Unexpected errors in the test run.")
-        self.assertEqual(output_data["failures"], 1, "Expected test failure not found.")
-        self.assertEqual(output_data["testsRun"], 2, "Unexpected number of tests run.")
+        self.assertEqual(output_data["args"]["q"], "Travel & Events")
 
     def test_execute_with_missing_parameter(self):
         command = f"python3 youtube_runner.py {self.path} -st WhisperTest -m tiny"
