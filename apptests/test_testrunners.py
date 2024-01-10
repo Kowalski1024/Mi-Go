@@ -16,13 +16,47 @@ from youtube_runner import YouTubeTestRunner
 class Test_YoutubeTestRunner_run(unittest.TestCase):
     def setUp(self) -> None:
         self.tester = Mock()
-        self.runner = YouTubeTestRunner(
-            "apptests/data/simpleTest.json",
-            "audio",
-            "./output",
-            iterations=1,
-            tester=self.tester,
+        self.mock_dummy_test_instance = Mock(
+            spec=models.DummyTest(
+                transcriber=lambda x: "This is a model for tests :)",
+                normalizer=lambda x: x.lower(),
+                differ=jiwer_differ,
+            )
         )
+        self.mock_dummy_test_instance.transcribe.return_value = (
+            "This is a model for tests :)"
+        )
+        self.mock_dummy_test_instance.additional_info.return_value = {
+            "modelName": "DummyTest",
+            "language": "en",
+            "modelSettings": "{'channel_selector': 'average', 'batch_size': 1}",
+        }
+        self.mock_dummy_test_instance.compare.return_value = {
+            "result": "Mock Compare Result"
+        }
+        self.runner = YouTubeTestRunner(
+            tester=self.mock_dummy_test_instance,
+            testplan_path="./apptests/data/simpleTest.json",
+            audio_dir="mock_audio_dir",
+            output_dir="mock_output_dir",
+            iterations=1,
+            save_transcripts=True,
+            save_to_database=False,
+            keep_audio=True,
+        )
+        self.mock_video = MagicMock(spec=YouTubeVideo)
+        self.mock_video.youtube_transcript.return_value = "This is a model for tests :)"
+        self.mock_video.download_mp3.return_value = "./apptests/data/sample.mp3"
+
+        self.read_data = '{"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token"}'
+        self.json_load_data = {
+            "args": {"q": "test"},
+            "items": [{"videoId": "123"}],
+            "nextPageToken": "token",
+            "language": "en",
+            "targetTranscript": "Mock Target Transcript",
+        }
+
         return super().setUp()
 
     def test_initialization(self):
@@ -39,42 +73,12 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
     def test_run(
         self, mock_generate, mock_from_dict, mock_open, mock_json_load, mock_json_dump
     ):
-        mock_dummy_test_instance = Mock(spec=models.DummyTest)
-        mock_dummy_test_instance.transcriber = lambda x: "This is a model for tests :)"
-        mock_dummy_test_instance.transcribe.return_value = (
-            "This is a model for tests :)"
+        mock_from_dict.return_value = self.mock_video
+
+        mock_open_func = mock_open(read_data=self.read_data)
+        mock_open_func.return_value.__enter__.return_value.read.return_value = (
+            self.read_data
         )
-        mock_dummy_test_instance.normalizer = lambda x: x.lower()
-        mock_dummy_test_instance.differ = jiwer_differ
-        mock_dummy_test_instance.language = "en"
-        mock_dummy_test_instance.additional_info.return_value = {
-            "modelName": "DummyTest",
-            "language": "en",
-            "modelSettings": "{'channel_selector': 'average', 'batch_size': 1}",
-        }
-        runner = YouTubeTestRunner(
-            tester=mock_dummy_test_instance,
-            testplan_path="./apptests/data/simpleTest.json",
-            audio_dir="mock_audio_dir",
-            output_dir="mock_output_dir",
-            iterations=1,
-            save_transcripts=True,
-            save_to_database=False,
-            keep_audio=True,
-        )
-        mock_video = MagicMock(spec=YouTubeVideo)
-        mock_video.youtube_transcript.return_value = "This is a model for tests :)"
-        mock_video.download_mp3.return_value = "./apptests/data/sample.mp3"
-        mock_from_dict.return_value = mock_video
-
-        mock_dummy_test_instance.compare.return_value = {
-            "result": "Mock Compare Result"
-        }
-
-        read_data = '{"args": {"q": "test"}, "items": [{"videoId": "123"}], "nextPageToken": "token"}'
-
-        mock_open_func = mock_open(read_data=read_data)
-        mock_open_func.return_value.__enter__.return_value.read.return_value = read_data
 
         def custom_json_dump(obj, f, ensure_ascii, indent):
             serializable_obj = {}
@@ -93,37 +97,27 @@ class Test_YoutubeTestRunner_run(unittest.TestCase):
         with patch("builtins.open", mock_open_func), patch(
             "json.load"
         ) as mock_json_load:
-            mock_json_load.return_value = {
-                "args": {"q": "test"},
-                "items": [{"videoId": "123"}],
-                "nextPageToken": "token",
-                "language": "en",
-                "targetTranscript": "Mock Target Transcript",
-            }
-            runner.run()
+            mock_json_load.return_value = self.json_load_data
+            self.runner.run()
             mock_generate.assert_called_once_with(
                 mock_json_load.return_value,
                 mock_open_func.return_value.__enter__.return_value,
                 ensure_ascii=False,
             )
 
-        mock_open.assert_called_once_with(read_data=read_data)
-        mock_dummy_test_instance.additional_info.assert_called_once()
+        mock_open.assert_called_once_with(read_data=self.read_data)
+        self.mock_dummy_test_instance.additional_info.assert_called_once()
 
     @patch("src.dataclasses.youtube_video.YouTubeVideo.from_dict")
     @patch("builtins.open")
     def test_run_with_exceptions(self, mock_from_dict, mock_open):
         mock_file = Mock()
-        mock_video = Mock()
         mock_open.return_value = mock_file
 
-        mock_from_dict.return_value = mock_video
+        mock_from_dict.return_value = self.mock_video
 
         self.runner.tester.transcriber = None
         self.runner.tester.normalizer = None
-        self.runner._iterations = 2
-
-        self.runner._testplan_path = "mock_testplan_path"
 
         with patch("builtins.open"), patch(
             "src.dataclasses.youtube_video.YouTubeVideo.from_dict"
