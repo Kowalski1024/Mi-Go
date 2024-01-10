@@ -1,0 +1,26 @@
+{
+    "args": {
+        "maxResults": 10,
+        "pageToken": "token",
+        "q": "test",
+        "regionCode": "US",
+        "relevanceLanguage": "en",
+        "topicId": "topic",
+        "videoCategoryId": "category",
+        "videoDuration": "medium",
+        "videoLicense": "creativeCommon"
+    },
+    "items": [
+        {
+            "videoId": "123",
+            "title": "Test Video",
+            "channelId": "channel123",
+            "channelTitle": "Test Channel",
+            "defaultAudioLanguage": "en",
+            "duration": "PT10M",
+            "publishTime": "2022-01-01T00:00:00Z"
+        }
+    ],
+    "nextPageToken": "token",
+    "etag": "abc123"
+}

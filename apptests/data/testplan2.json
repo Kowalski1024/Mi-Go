@@ -1,0 +1,39 @@
+{
+    "args": {
+        "maxResults": 10,
+        "pageToken": "token",
+        "q": "test",
+        "regionCode": "US",
+        "relevanceLanguage": "en",
+        "topicId": "1",
+        "videoCategoryId": "1",
+        "videoDuration": "1",
+        "videoLicense": "1"
+    },
+    "items": [
+        {
+            "title": "1",
+            "channelId": "1",
+            "channelTitle": "1",
+            "defaultAudioLanguage": "en",
+            "videoId": "123",
+            "results": {
+                "modelName": "TestModel",
+                "language": "en",
+                "wer": 0.1,
+                "mer": 1,
+                "wil": 1,
+                "wip": 1,
+                "hits": 1,
+                "substitutions": 12,
+                "deletions": 12,
+                "insertions": 65,
+                "modelSettings": "{'param': 'value'}"
+            },
+            "duration": "12",
+            "publishTime": "2022-01-01T00:00:00Z"
+        }
+    ],
+    "nextPageToken": "token",
+    "etag": "abc123"
+}
