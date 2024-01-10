@@ -1,0 +1,35 @@
+{
+    "args": {
+        "maxResults": 10,
+        "pageToken": null,
+        "q": "Travel & Events",
+        "regionCode": "US",
+        "relevanceLanguage": "en",
+        "topicId": null,
+        "videoCategoryId": "19",
+        "videoDuration": "medium",
+        "videoLicense": "creativeCommon"
+    },
+    "etag": "ywoFfoHqiyEoc2tHj1VB5n4iAoc",
+    "items": [
+        {
+            "channelId": "UCWlvkaA27BCrcYG6gA0K8UA",
+            "channelTitle": "SMS Frankfurt Group Travel",
+            "defaultAudioLanguage": "en",
+            "duration": "PT14M41S",
+            "generatedTranscripts": [
+                "en"
+            ],
+            "manuallyCreatedTranscripts": [
+                "en",
+                "de"
+            ],
+            "publishTime": "2016-12-21T11:09:18Z",
+            "title": "We create your Bucket List Trips and Events | Discover the Baltics with SMS Frankfurt Group Travel",
+            "videoId": "YazZwd48ws0"
+        }
+    ],
+    "nextPageToken": "CAoQAA",
+    "regionCode": "US",
+    "videoCategoryId": "19"
+}
