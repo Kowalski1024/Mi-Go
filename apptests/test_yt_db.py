@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 import unittest
 
@@ -21,23 +22,8 @@ with open(f"{path}testplan1.json", "r", encoding="utf-8") as file:
 with open(f"{path}testplan2.json", "r", encoding="utf-8") as file:
     testplan_data2 = json.load(file)
 
-with open(f"{path}testplan3.json", "r", encoding="utf-8") as file:
-    testplan_data3 = json.load(file)
 
-with open(f"{path}testplan4.json", "r", encoding="utf-8") as file:
-    testplan_data4 = json.load(file)
-
-with open(f"{path}testplan5.json", "r", encoding="utf-8") as file:
-    testplan_data5 = json.load(file)
-
-with open(f"{path}video.json", "r", encoding="utf-8") as file:
-    video_data = json.load(file)
-
-with open(f"{path}result.json", "r", encoding="utf-8") as file:
-    result_data = json.load(file)
-
-with open(f"{path}result2.json", "r", encoding="utf-8") as file:
-    result_data2 = json.load(file)
+result_data = testplan_data2["items"][0]["results"]
 
 
 class TestYouTubeModels(unittest.TestCase):
@@ -68,7 +54,7 @@ class TestYouTubeModels(unittest.TestCase):
         self.assertEqual(result.etag, "abc123")
 
     def test_youtube_video(self):
-        youtube_video = YouTubeVideo.from_video(video_data)
+        youtube_video = YouTubeVideo.from_video(testplan_data["items"][0])
         self.session.add(youtube_video)
         self.session.commit()
 
@@ -85,7 +71,7 @@ class TestYouTubeModels(unittest.TestCase):
         self.session.add(youtube_testplan)
         self.session.commit()
 
-        youtube_video = YouTubeVideo.from_video(video_data)
+        youtube_video = YouTubeVideo.from_video(testplan_data["items"][0])
         self.session.add(youtube_video)
         self.session.commit()
 
@@ -140,12 +126,12 @@ class TestYouTubeModels(unittest.TestCase):
         self.session.add(youtube_testplan)
         self.session.commit()
 
-        youtube_video = YouTubeVideo.from_video(video_data)
+        youtube_video = YouTubeVideo.from_video(testplan_data["items"][0])
         self.session.add(youtube_video)
         self.session.commit()
 
         youtube_result = YouTubeResult.from_result(
-            youtube_testplan.id, youtube_video.video_id, result_data2
+            youtube_testplan.id, youtube_video.video_id, result_data.pop("model_settings")
         )
         self.session.add(youtube_result)
         self.session.commit()
@@ -159,7 +145,7 @@ class TestYouTubeModels(unittest.TestCase):
         self.session.add(youtube_testplan)
         self.session.commit()
 
-        youtube_video = YouTubeVideo.from_video(video_data)
+        youtube_video = YouTubeVideo.from_video(testplan_data["items"][0])
         self.session.add(youtube_video)
         self.session.commit()
 
@@ -212,23 +198,29 @@ class TestInsertYouTubeResult(unittest.TestCase):
 
     def test_insert_youtube_result_duplicate_testplan(self):
         testplan_name = "test_plan"
-        insert_youtube_result(self.session, testplan_name, testplan_data3)
-        success = insert_youtube_result(self.session, testplan_name, testplan_data3)
+        insert_youtube_result(self.session, testplan_name, testplan_data)
+        success = insert_youtube_result(self.session, testplan_name, testplan_data)
 
         self.assertFalse(success)
 
     def test_insert_youtube_result_duplicate_video(self):
         testplan_name = "test_plan"
-
-        insert_youtube_result(self.session, testplan_name, testplan_data3)
-        success = insert_youtube_result(self.session, testplan_name, testplan_data4)
+        
+        testplan = deepcopy(testplan_data)
+        testplan["items"].append(testplan["items"][0])
+        success = insert_youtube_result(self.session, testplan_name, testplan_data)
 
         self.assertFalse(success)
 
     def test_insert_youtube_result_with_no_all_keys(self):
         testplan_name = "test_plan"
-
-        success = insert_youtube_result(self.session, testplan_name, testplan_data5)
+        testplan = deepcopy(testplan_data)
+        testplan.pop("relevanceLanguage")
+        testplan.pop("topicId")
+        testplan.pop("videoCategoryId")
+        testplan.pop("videoDuration")
+        
+        success = insert_youtube_result(self.session, testplan_name, testplan)
         self.assertFalse(success)
         # it should check if keys exist in db
 
