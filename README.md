@@ -110,4 +110,22 @@ Run the testrunner, example:
 python youtube_runner.py ./testplans/{testplan.json} DummyTest
 ```
 
+Bibtex
+```
+﻿@Article{MiGo2024,
+author={Wojnar, Tomasz and Hryszko, Jaros{\l}aw and Roman, Adam},
+title={Mi-Go: tool which uses YouTube as data source for evaluating general-purpose speech recognition machine learning models},
+journal={EURASIP Journal on Audio, Speech, and Music Processing},
+year={2024},
+month={May},
+day={01},
+volume={2024},
+number={1},
+pages={24},
+issn={1687-4722},
+doi={10.1186/s13636-024-00343-9},
+url={https://doi.org/10.1186/s13636-024-00343-9}
+}
+```
+
 
