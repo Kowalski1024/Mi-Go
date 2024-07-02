@@ -110,7 +110,7 @@ Run the testrunner, example:
 python youtube_runner.py ./testplans/{testplan.json} DummyTest
 ```
 
-Bibtex
+## Bibtex
 ```
 ﻿@Article{MiGo2024,
 author={Wojnar, Tomasz and Hryszko, Jaros{\l}aw and Roman, Adam},
